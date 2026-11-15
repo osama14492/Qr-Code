@@ -2120,7 +2120,7 @@
             const modal = document.getElementById('fixed-barcode-modal');
             const qrContainer = document.getElementById('fixed-qrcode-container');
             const linkDisplay = document.getElementById('fixed-menu-link-display');
-            const menuUrl = window.location.href.split('#')[0];
+            const menuUrl = window.location.href.split('#')[0];+ '#menu'
 
             linkDisplay.textContent = menuUrl;
             qrContainer.innerHTML = '';
