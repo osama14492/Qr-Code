@@ -1,0 +1,2707 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إدارة الحسابات اليومية | الكاشير الذكي PRO</title>
+    
+    <meta name="theme-color" content="#0B0E14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="الكاشير الذكي">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link id="pwa-manifest" rel="manifest" href="">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: {
+                        dark: { 950: '#0B0E14', 900: '#141923', 800: '#1B2230', 700: '#273043' },
+                        gold: { 400: '#E5C158', 500: '#D4AF37', 600: '#B59224' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0B0E14; color: #f4f4f5; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #141923; }
+        ::-webkit-scrollbar-thumb { background: #273043; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+        @media print {
+            body { background-color: #ffffff !important; color: #000000 !important; }
+            .no-print { display: none !important; }
+            .print-card { background-color: #f9fafb !important; border: 1px solid #d1d5db !important; color: #000000 !important; box-shadow: none !important; }
+            .print-text-dark { color: #000000 !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
+
+    <div id="toast" class="fixed bottom-5 left-5 z-[70] transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none no-print">
+        <div class="bg-dark-800 border border-amber-500/50 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-amber-400 text-lg"></i>
+            <span id="toast-msg" class="text-sm font-medium">تم الحفظ بنجاح</span>
+        </div>
+    </div>
+
+    <!-- بطاقة عايمة ثابتة للعميل لفتح المنيو أو إظهار الباركود السريع -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col gap-2 no-print">
+        <button type="button" onclick="window.openFixedBarcodeModal()" class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-2xl flex items-center justify-center text-xl hover:scale-110 transition border-2 border-purple-400/50" title="باركود المنيو للعملاء">
+            <i class="fa-solid fa-qrcode"></i>
+        </button>
+        <button type="button" onclick="window.openCustomerMenuModal()" class="w-14 h-14 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 text-dark-950 shadow-2xl flex items-center justify-center text-xl hover:scale-110 transition border-2 border-gold-300 font-extrabold" title="فتح المنيو الإلكتروني">
+            <i class="fa-solid fa-utensils"></i>
+        </button>
+    </div>
+
+    <header class="bg-dark-900/95 backdrop-blur-md border-b border-dark-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <div onclick="window.safeRequirePin(() => window.openSettingsModal())" title="اضغط لتغيير اللوجو وإعدادات النشاط" class="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-dark-950 font-bold text-xl shadow-lg shadow-amber-500/20 cursor-pointer overflow-hidden group border border-amber-500/40 shrink-0">
+                            <img id="header-logo-img" src="" alt="Logo" class="hidden w-full h-full object-cover">
+                            <i id="header-logo-icon" class="fa-solid fa-cash-register"></i>
+                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition no-print">
+                                <i class="fa-solid fa-camera text-white text-xs"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="text-base sm:text-xl font-bold text-white tracking-wide flex items-center gap-1.5 print-text-dark">
+                                <span id="header-business-name" class="truncate max-w-[160px] sm:max-w-none">Freshly for Cold & Hot Drinks</span>
+                                <span id="pin-active-badge" class="hidden text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full no-print" title="محمي برقم سري">
+                                    <i class="fa-solid fa-lock"></i>
+                                </span>
+                            </h1>
+                            <div class="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
+                                <i class="fa-regular fa-calendar text-amber-400"></i>
+                                <input type="date" id="current-date" class="bg-transparent text-zinc-300 print-text-dark focus:outline-none focus:text-amber-400 cursor-pointer font-medium">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex lg:hidden items-center gap-1.5 no-print">
+                        <select id="language-switcher-mobile" onchange="window.changeLanguage(this.value)" class="bg-dark-800 text-amber-400 border border-dark-700 rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none cursor-pointer">
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                            <option value="de">Deutsch</option>
+                            <option value="fr">Français</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                        <button type="button" onclick="window.openCustomerMenuModal()" title="منيو العملاء والسلة" class="p-2 rounded-xl bg-gold-500/20 text-gold-400 border border-gold-500/40 hover:bg-gold-500/30 transition">
+                            <i class="fa-solid fa-utensils"></i>
+                        </button>
+                        <button type="button" onclick="window.openFixedBarcodeModal()" title="باركود المنيو" class="p-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </button>
+                        <button type="button" onclick="window.safeRequirePin(() => window.openReportsModal())" title="التقارير الشاملة" class="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </button>
+                        <button type="button" onclick="window.openInstallModal()" title="تثبيت التطبيق" class="p-2 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/25 transition">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                        </button>
+                        <button type="button" onclick="window.sendWhatsAppReport()" title="واتساب" class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2 no-print">
+                    <div class="flex items-center gap-2 bg-dark-800/80 border border-dark-700 px-2.5 py-1.5 rounded-xl w-full sm:w-auto justify-between sm:justify-start">
+                        <span class="text-xs text-zinc-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-coins text-amber-400"></i> <span data-i18n="exchange">الصرف:</span>
+                        </span>
+                        <div class="flex items-center gap-1 bg-dark-900 px-2 py-1 rounded-lg border border-dark-700">
+                            <span class="text-xs font-bold text-emerald-400">$ 1 =</span>
+                            <input type="number" step="0.05" id="rate-usd" class="w-12 bg-transparent text-white text-xs font-bold text-center focus:outline-none" value="50.00">
+                            <span class="text-[10px] text-zinc-500" data-i18n="currency_egp">ج.م</span>
+                        </div>
+                        <div class="flex items-center gap-1 bg-dark-900 px-2 py-1 rounded-lg border border-dark-700">
+                            <span class="text-xs font-bold text-blue-400">€ 1 =</span>
+                            <input type="number" step="0.05" id="rate-eur" class="w-12 bg-transparent text-white text-xs font-bold text-center focus:outline-none" value="54.00">
+                            <span class="text-[10px] text-zinc-500" data-i18n="currency_egp">ج.م</span>
+                        </div>
+                    </div>
+
+                    <div class="hidden lg:flex items-center gap-1.5 flex-wrap">
+                        <select id="language-switcher-desktop" onchange="window.changeLanguage(this.value)" class="bg-dark-800 text-amber-400 border border-dark-700 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none cursor-pointer">
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                            <option value="de">Deutsch</option>
+                            <option value="fr">Français</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                        <button type="button" onclick="window.openCustomerMenuModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 text-xs font-extrabold transition shadow-lg shadow-gold-500/20">
+                            <i class="fa-solid fa-utensils"></i>
+                            <span data-i18n="menu_cart">منيو العملاء والسلة</span>
+                        </button>
+                        <button type="button" onclick="window.openFixedBarcodeModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 text-xs font-bold transition">
+                            <i class="fa-solid fa-qrcode"></i>
+                            <span data-i18n="menu_barcode">باركود المنيو</span>
+                        </button>
+                        <button type="button" onclick="window.safeRequirePin(() => window.openReportsModal())" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-dark-800 text-amber-400 border border-dark-700 hover:border-amber-500/50 text-xs font-bold transition">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <span data-i18n="reports">التقارير</span>
+                        </button>
+                        <button type="button" onclick="window.openInstallModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/15 text-indigo-300 border border-indigo-500/40 text-xs font-bold transition">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                            <span data-i18n="install">تثبيت</span>
+                        </button>
+                        <button type="button" onclick="window.sendWhatsAppReport()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>واتساب</span>
+                        </button>
+                        <button type="button" onclick="window.safeRequirePin(() => window.openSettingsModal())" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-dark-800 text-zinc-300 border border-dark-700 hover:text-amber-400 text-xs font-bold transition">
+                            <i class="fa-solid fa-gear"></i>
+                            <span data-i18n="settings">الإعدادات</span>
+                        </button>
+                        <button type="button" onclick="window.openNewDayModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-bold transition">
+                            <i class="fa-solid fa-rotate-right"></i>
+                            <span data-i18n="new_day">يوم جديد</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 space-y-6">
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
+            <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4 relative overflow-hidden print-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-zinc-400" data-i18n="opening_cash">العهدة الافتتاحية</span>
+                    <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300"><i class="fa-solid fa-vault text-sm"></i></div>
+                </div>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <input type="number" id="opening-cash" value="0" min="0" step="10" class="w-full bg-dark-800/80 border border-dark-700 focus:border-amber-500 rounded-lg px-2.5 py-1 text-xl font-extrabold text-white focus:outline-none">
+                    <span class="currency-label text-xs font-bold text-amber-400 shrink-0" data-i18n="currency_egp">ج.م</span>
+                </div>
+                <p class="text-[11px] text-zinc-500 mt-2" data-i18n="opening_cash_desc">رصيد بداية اليوم بالدرج</p>
+            </div>
+
+            <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4 relative overflow-hidden print-card">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold text-zinc-400" data-i18n="total_sales">إجمالي المبيعات</span>
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400"><i class="fa-solid fa-arrow-trend-up text-sm"></i></div>
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <h2 id="dash-total-sales" class="text-2xl font-extrabold text-emerald-400">0.00</h2>
+                    <span class="currency-label text-xs font-bold text-zinc-400" data-i18n="currency_egp">ج.م</span>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-dark-800 flex flex-wrap gap-1 text-[11px]">
+                    <span id="sales-detail-egp" class="bg-dark-800 text-zinc-300 px-1.5 py-0.5 rounded">0 ج.م</span>
+                    <span id="sales-detail-usd" class="bg-emerald-950/60 text-emerald-300 px-1.5 py-0.5 rounded">$0</span>
+                    <span id="sales-detail-eur" class="bg-blue-950/60 text-blue-300 px-1.5 py-0.5 rounded">€0</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-900 border border-sky-500/30 rounded-2xl p-4 relative overflow-hidden print-card">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold text-sky-300" data-i18n="visa_sales">مبيعات الفيزا (البنك)</span>
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/15 flex items-center justify-center text-sky-400"><i class="fa-regular fa-credit-card text-sm"></i></div>
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <h2 id="dash-visa-sales" class="text-2xl font-extrabold text-sky-400">0.00</h2>
+                    <span class="currency-label text-xs font-bold text-zinc-400" data-i18n="currency_egp">ج.م</span>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-dark-800 flex items-center justify-between text-[11px]">
+                    <span class="text-zinc-400" data-i18n="cash_sales_sub">مبيعات الكاش:</span>
+                    <span id="dash-cash-sales-sub" class="font-bold text-emerald-400">0.00 ج.م</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4 relative overflow-hidden print-card">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold text-zinc-400" data-i18n="total_expenses">إجمالي المصاريف</span>
+                    <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400"><i class="fa-solid fa-arrow-trend-down text-sm"></i></div>
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <h2 id="dash-total-expenses" class="text-2xl font-extrabold text-rose-400">0.00</h2>
+                    <span class="currency-label text-xs font-bold text-zinc-400" data-i18n="currency_egp">ج.م</span>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-dark-800 flex flex-wrap gap-1 text-[11px]">
+                    <span id="exp-detail-egp" class="bg-dark-800 text-zinc-300 px-1.5 py-0.5 rounded">0 ج.م</span>
+                    <span id="exp-detail-usd" class="bg-rose-950/40 text-rose-300 px-1.5 py-0.5 rounded">$0</span>
+                    <span id="exp-detail-eur" class="bg-rose-950/40 text-rose-300 px-1.5 py-0.5 rounded">€0</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4 relative overflow-hidden print-card">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold text-zinc-400" data-i18n="net_profit">صافي ربح اليوم</span>
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400"><i class="fa-solid fa-scale-balanced text-sm"></i></div>
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <h2 id="dash-net-profit" class="text-2xl font-extrabold text-white">0.00</h2>
+                    <span class="currency-label text-xs font-bold text-zinc-400" data-i18n="currency_egp">ج.م</span>
+                </div>
+                <p class="text-[11px] text-zinc-500 mt-2.5" data-i18n="net_profit_desc">إجمالي المبيعات - المصاريف</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-dark-800 to-dark-900 border-2 border-gold-500/60 rounded-2xl p-4 relative overflow-hidden shadow-lg shadow-amber-500/10 print-card">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-gold-400" data-i18n="drawer_cash">المتبقي بالدرج (كاش فعلي)</span>
+                    <div class="w-8 h-8 rounded-lg bg-gold-500 text-dark-950 flex items-center justify-center font-bold"><i class="fa-solid fa-wallet text-sm"></i></div>
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <h2 id="dash-drawer-cash" class="text-2xl font-extrabold text-gold-400">0.00</h2>
+                    <span class="currency-label text-xs font-bold text-amber-200/70" data-i18n="currency_egp">ج.م</span>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-dark-700/80 flex items-center justify-between text-[11px]">
+                    <span class="text-zinc-400" data-i18n="pending_orders_label">أوردرات معلقة:</span>
+                    <span id="dash-pending-summary" class="font-bold text-orange-400">0 (0.00)</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <section class="lg:col-span-7 space-y-4">
+                <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4 sm:p-5 shadow-xl print-card">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-2.5 h-6 rounded-full bg-gold-500"></span>
+                            <h3 class="text-base sm:text-lg font-bold text-white" data-i18n="sales_section_title">تسجيل الطلبات والمبيعات</h3>
+                        </div>
+                        <div class="flex items-center gap-1.5 no-print">
+                            <button type="button" onclick="window.openCustomerMenuModal()" class="text-xs bg-gold-500/15 hover:bg-gold-500/25 text-gold-400 border border-gold-500/40 px-2.5 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-utensils"></i>
+                                <span data-i18n="open_menu_btn">فتح المنيو والطلب</span>
+                            </button>
+                            <button type="button" onclick="window.safeRequirePin(() => window.openManageItemsModal())" class="text-xs bg-dark-800 hover:bg-dark-700 text-gold-400 border border-gold-500/30 px-2.5 py-1.5 rounded-xl font-semibold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span data-i18n="manage_items_btn">إدارة الأصناف</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 no-print">
+                        <div class="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2" id="category-filter-tabs"></div>
+                        <div id="quick-items-container" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-dark-950/40 rounded-xl border border-dark-800"></div>
+                    </div>
+
+                    <form id="sales-form" class="space-y-3 no-print bg-dark-800/50 p-3.5 sm:p-4 rounded-xl border border-dark-700/80">
+                        <input type="hidden" id="sale-edit-id" value="">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                            <div class="sm:col-span-5">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1"><span data-i18n="item_name">اسم الصنف</span> <span class="text-rose-400">*</span></label>
+                                <input type="text" id="sale-item-name" required placeholder="اختر الصنف أو اكتبه..."
+                                    class="w-full bg-dark-900 border border-dark-700 focus:border-amber-500 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1" data-i18n="category">القسم</label>
+                                <input type="text" id="sale-category" list="categories-datalist" value="مشروبات" placeholder="القسم..."
+                                    class="w-full bg-dark-900 border border-dark-700 focus:border-amber-500 rounded-xl px-3 py-2 text-sm text-amber-300 placeholder-zinc-500 focus:outline-none">
+                                <datalist id="categories-datalist"></datalist>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1"><span data-i18n="qty">الكمية</span> <span class="text-rose-400">*</span></label>
+                                <input type="number" id="sale-qty" value="1" min="1" step="1" required
+                                    class="w-full bg-dark-900 border border-dark-700 focus:border-amber-500 rounded-xl px-2 py-2 text-sm text-white text-center font-bold focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1" data-i18n="currency">العملة</label>
+                                <select id="sale-currency" class="w-full bg-dark-900 border border-dark-700 focus:border-amber-500 rounded-xl px-2 py-2 text-sm text-amber-400 font-bold focus:outline-none cursor-pointer">
+                                    <option value="EGP">ج.م</option>
+                                    <option value="USD">$</option>
+                                    <option value="EUR">€</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                            <div class="sm:col-span-4">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1"><span data-i18n="unit_price">سعر الوحدة</span> <span class="text-rose-400">*</span></label>
+                                <input type="number" id="sale-price" step="0.01" min="0" required placeholder="0.00"
+                                    class="w-full bg-dark-900 border border-dark-700 focus:border-amber-500 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-5">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1" data-i18n="client_note">العميل / الطاولة / ملاحظة</label>
+                                <input type="text" id="sale-note" placeholder="مثال: أ. أحمد، طاولة 4..."
+                                    class="w-full bg-dark-900 border border-dark-700 focus:border-amber-500 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-3 bg-dark-900 border border-dark-700 rounded-xl px-2.5 py-1.5 text-center">
+                                <span class="block text-[10px] text-zinc-400" data-i18n="total_egp">الإجمالي بالمصري</span>
+                                <span id="sale-preview-egp" class="text-sm font-extrabold text-emerald-400">0.00 ج.م</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="button" onclick="window.toggleExtrasBox()" class="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1.5 transition">
+                                <i id="extras-chevron" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                                <span data-i18n="extras_toggle">إضافة خصم أو خدمة / ضريبة (اختياري)</span>
+                            </button>
+                            <div id="sale-extras-box" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2 bg-dark-900/70 p-3 rounded-xl border border-dark-700/80">
+                                <div>
+                                    <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="discount">الخصم</label>
+                                    <div class="flex gap-1.5">
+                                        <input type="number" id="sale-discount" step="0.01" min="0" value="0" placeholder="0"
+                                            class="w-full bg-dark-950 border border-dark-700 focus:border-rose-400 rounded-lg px-2.5 py-1.5 text-xs text-rose-300 font-bold focus:outline-none">
+                                        <select id="sale-discount-type" class="bg-dark-950 border border-dark-700 rounded-lg px-2 py-1.5 text-xs text-zinc-300 font-bold focus:outline-none">
+                                            <option value="amount" data-i18n="disc_amount">مبلغ</option>
+                                            <option value="percent">%</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="tax_service">نسبة الخدمة / الضريبة (%)</label>
+                                    <div class="relative">
+                                        <input type="number" id="sale-tax" step="0.5" min="0" max="100" value="0" placeholder="0"
+                                            class="w-full bg-dark-950 border border-dark-700 focus:border-sky-400 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-bold focus:outline-none">
+                                        <span class="absolute left-3 top-1.5 text-xs text-zinc-500">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <label class="block text-xs font-medium text-zinc-300 mb-1.5" data-i18n="payment_status">حالة السداد:</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment-status" value="paid" checked onchange="window.togglePaymentMethodBox()" class="peer hidden">
+                                    <div class="py-2 px-2.5 rounded-xl border border-dark-700 bg-dark-900 text-zinc-400 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        <span data-i18n="paid_status">سدد (يضاف للمبيعات)</span>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment-status" value="unpaid" onchange="window.togglePaymentMethodBox()" class="peer hidden">
+                                    <div class="py-2 px-2.5 rounded-xl border border-dark-700 bg-dark-900 text-zinc-400 peer-checked:border-orange-500 peer-checked:bg-orange-500/15 peer-checked:text-orange-400 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-solid fa-clock"></i>
+                                        <span data-i18n="unpaid_status">لم يسدد (أوردر معلق)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="payment-method-box" class="pt-1">
+                            <label class="block text-xs font-medium text-zinc-300 mb-1.5" data-i18n="payment_method">طريقة التحصيل:</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment-method" value="cash" checked class="peer hidden">
+                                    <div class="py-2 px-2.5 rounded-xl border border-dark-700 bg-dark-900 text-zinc-400 peer-checked:border-emerald-400 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-solid fa-money-bill-wave"></i>
+                                        <span data-i18n="cash_method">كاش (يدخل الدرج)</span>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment-method" value="visa" class="peer hidden">
+                                    <div class="py-2 px-2.5 rounded-xl border border-dark-700 bg-dark-900 text-zinc-400 peer-checked:border-sky-400 peer-checked:bg-sky-500/15 peer-checked:text-sky-300 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                                        <i class="fa-regular fa-credit-card"></i>
+                                        <span data-i18n="visa_method">فيزا / بطاقة (البنك)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <button type="submit" id="btn-submit-order" class="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-dark-950 font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 text-sm">
+                                <i class="fa-solid fa-plus-circle"></i>
+                                <span data-i18n="submit_order_btn">تسجيل الطلب</span>
+                            </button>
+                            <button type="button" id="sale-cancel-edit" onclick="window.resetSaleForm()" class="hidden bg-dark-700 hover:bg-dark-600 text-zinc-300 font-semibold py-2.5 px-4 rounded-xl text-sm transition" data-i18n="cancel">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="pending-orders-section" class="mt-5 bg-orange-950/20 border border-orange-500/40 rounded-xl p-3.5 sm:p-4 print-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse no-print"></span>
+                                <h4 class="text-xs sm:text-sm font-bold text-orange-400"><span data-i18n="pending_orders_title">الأوردرات المعلقة - لم تُسدد</span> (<span id="pending-count">0</span>)</h4>
+                            </div>
+                            <span id="pending-total-badge" class="text-xs font-extrabold bg-orange-500/15 text-orange-300 border border-orange-500/30 px-2.5 py-0.5 rounded-lg">0.00 ج.م</span>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-orange-500/20 bg-dark-900/60">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="bg-dark-800/90 text-zinc-400 text-xs border-b border-dark-700">
+                                        <th class="py-2 px-3 font-semibold" data-i18n="th_item_client">الصنف والعميل</th>
+                                        <th class="py-2 px-2 font-semibold text-center" data-i18n="th_qty">الكمية</th>
+                                        <th class="py-2 px-3 font-semibold" data-i18n="th_value">القيمة</th>
+                                        <th class="py-2 px-3 font-semibold" data-i18n="th_egp">بالمصري</th>
+                                        <th class="py-2 px-2 font-semibold text-center no-print" data-i18n="th_action">تأكيد السداد / إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pending-table-body" class="divide-y divide-dark-800 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <h4 class="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-xs"></i>
+                                <span data-i18n="collected_sales_title">سجل المبيعات المحصلة</span> (<span id="sales-count">0</span>)
+                            </h4>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-dark-700">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="bg-dark-800 text-zinc-400 text-xs border-b border-dark-700">
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="th_item_payment">الصنف وطريقة الدفع</th>
+                                        <th class="py-2.5 px-2 font-semibold text-center" data-i18n="th_qty">الكمية</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="th_value">القيمة</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="th_equivalent">المعادل (ج.م)</th>
+                                        <th class="py-2.5 px-2 font-semibold text-center no-print" data-i18n="th_actions">إجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sales-table-body" class="divide-y divide-dark-800 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="lg:col-span-5 space-y-4">
+                <div class="bg-dark-900 border border-dark-700 rounded-2xl p-4 sm:p-5 shadow-xl print-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-2.5 h-6 rounded-full bg-rose-500"></span>
+                            <h3 class="text-base sm:text-lg font-bold text-white" data-i18n="expenses_section_title">تسجيل المصاريف</h3>
+                        </div>
+                        <span class="text-xs text-zinc-400 bg-dark-800 px-2.5 py-1 rounded-lg border border-dark-700" data-i18n="expenses_badge">نثريات / خامات / يوميات</span>
+                    </div>
+
+                    <form id="expense-form" class="space-y-3.5 no-print bg-dark-800/50 p-4 rounded-xl border border-dark-700/80">
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-300 mb-1"><span data-i18n="exp_desc_label">بيان المصروف / السبب</span> <span class="text-rose-400">*</span></label>
+                            <input type="text" id="exp-desc" required placeholder="مثال: لبن، ثلج، يومية موظف، كهرباء..."
+                                class="w-full bg-dark-900 border border-dark-700 focus:border-rose-500 rounded-xl px-3.5 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-2.5 items-end">
+                            <div class="col-span-5">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1"><span data-i18n="amount">المبلغ</span> <span class="text-rose-400">*</span></label>
+                                <input type="number" id="exp-amount" step="0.01" min="0" required placeholder="0.00"
+                                    class="w-full bg-dark-900 border border-dark-700 focus:border-rose-500 rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none">
+                            </div>
+
+                            <div class="col-span-4">
+                                <label class="block text-xs font-medium text-zinc-300 mb-1" data-i18n="currency">العملة</label>
+                                <select id="exp-currency" class="w-full bg-dark-900 border border-dark-700 focus:border-rose-500 rounded-xl px-2 py-2 text-sm text-rose-400 font-bold focus:outline-none cursor-pointer">
+                                    <option value="EGP">جنيه (EGP)</option>
+                                    <option value="USD">دولار ($)</option>
+                                    <option value="EUR">يورو (€)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-span-3 bg-dark-900 border border-dark-700 rounded-xl px-2 py-1.5 text-center">
+                                <span class="block text-[10px] text-zinc-400" data-i18n="in_egp">بالمصري</span>
+                                <span id="exp-preview-egp" class="text-xs font-extrabold text-rose-400">0 ج.م</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-rose-600/20 transition flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-minus-circle"></i>
+                            <span data-i18n="submit_expense_btn">تسجيل مصروف</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-5">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <h4 class="text-sm font-bold text-zinc-300"><span data-i18n="expenses_log_title">سجل مصاريف اليوم</span> (<span id="expenses-count">0</span>)</h4>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-dark-700">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="bg-dark-800 text-zinc-400 text-xs border-b border-dark-700">
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="th_statement">البيان</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="th_amount">المبلغ</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="th_equivalent">المعادل (ج.م)</th>
+                                        <th class="py-2.5 px-2 font-semibold text-center no-print" data-i18n="th_delete">حذف</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expenses-table-body" class="divide-y divide-dark-800 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- نافذة منيو العملاء والطلب الإلكتروني السلس -->
+    <div id="customer-menu-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex-col no-print">
+        <div class="bg-dark-900 border-b border-dark-700 px-4 py-3 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gold-500 text-dark-950 flex items-center justify-center font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-white" data-i18n="customer_menu_title">قائمة المشروبات والمنيو الإلكتروني</h2>
+                    <p class="text-xs text-zinc-400" data-i18n="customer_menu_subtitle">اختر مشروباتك المفضلة وأضفها إلى السلة للطلب الفوري</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="window.toggleCartDrawer(true)" class="relative bg-gold-500 hover:bg-gold-400 text-dark-950 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span data-i18n="cart_btn">السلة</span>
+                    <span id="cart-badge" class="absolute -top-2 -right-2 w-5 h-5 bg-rose-600 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center">0</span>
+                </button>
+                <button type="button" onclick="window.closeCustomerMenuModal()" class="w-9 h-9 rounded-full bg-dark-800 text-zinc-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-dark-950 px-4 py-2.5 border-b border-dark-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="customer-cat-tabs"></div>
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="customer-search-input" oninput="window.renderCustomerMenu()" placeholder="ابحث عن مشروب..." 
+                    class="w-full bg-dark-900 border border-dark-700 focus:border-gold-500 rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none" data-i18n-placeholder="search_placeholder">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-zinc-500 text-xs"></i>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6 bg-dark-950/80">
+            <div id="customer-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto"></div>
+        </div>
+    </div>
+
+    <!-- نافذة سلة الطلبات المنسدلة -->
+    <div id="cart-drawer" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden justify-end no-print">
+        <div class="bg-dark-900 border-r border-dark-700 w-full max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-left duration-300">
+            <div class="p-4 border-b border-dark-800 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-cart-shopping text-gold-400 text-lg"></i>
+                    <h3 class="text-base font-extrabold text-white" data-i18n="cart_title">سلة الطلبات</h3>
+                </div>
+                <button type="button" onclick="window.toggleCartDrawer(false)" class="w-8 h-8 rounded-full bg-dark-800 text-zinc-400 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-4 bg-dark-950/60 border-b border-dark-800 space-y-2.5 shrink-0">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1"><span data-i18n="table_client_label">رقم الطاولة / اسم العميل</span> <span class="text-rose-400">*</span></label>
+                    <input type="text" id="cart-client-name" placeholder="مثال: طاولة 5 أو اسم العميل..."
+                        class="w-full bg-dark-900 border border-dark-700 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1" data-i18n="notes_label">ملاحظات إضافية (سكر، ثلج...)</label>
+                    <input type="text" id="cart-order-notes" placeholder="اختياري..."
+                        class="w-full bg-dark-900 border border-dark-700 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                </div>
+            </div>
+
+            <div id="cart-items-list" class="flex-1 overflow-y-auto p-4 space-y-3 divide-y divide-dark-800/60"></div>
+
+            <div class="p-4 border-t border-dark-800 bg-dark-900 shrink-0 space-y-3">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-zinc-400" data-i18n="total">الإجمالي:</span>
+                    <span id="cart-total-amount" class="text-lg font-extrabold text-gold-400">0.00 ج.م</span>
+                </div>
+                <button type="button" onclick="window.submitCartOrderToCashier()" class="w-full py-3 px-3 rounded-xl bg-gold-500 hover:bg-gold-400 text-dark-950 font-bold text-xs transition flex items-center justify-center gap-1.5 shadow">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span data-i18n="send_to_cashier_btn">إرسال الطلب إلى الكاشير</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة عرض الباركود الثابت للمنيو -->
+    <div id="fixed-barcode-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-dark-900 border-2 border-gold-500/60 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center relative">
+            <button type="button" onclick="window.closeFixedBarcodeModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-dark-800 text-zinc-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="w-14 h-14 rounded-2xl bg-gold-500/15 text-gold-400 border border-gold-500/40 flex items-center justify-center text-2xl font-extrabold mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-qrcode"></i>
+            </div>
+
+            <h3 class="text-xl font-extrabold text-white mb-1" data-i18n="barcode_modal_title">الباركود الثابت للمنيو الإلكتروني</h3>
+            <p class="text-xs text-zinc-400 mb-5" data-i18n="barcode_modal_subtitle">امسح الكود بكاميرا الموبايل لفتح المنيو والطلب مباشرة</p>
+
+            <div class="bg-white p-4 rounded-2xl shadow-xl inline-block border-4 border-gold-500/40 mb-4">
+                <div id="fixed-qrcode-container" class="flex items-center justify-center"></div>
+            </div>
+
+            <p id="fixed-menu-link-display" dir="ltr" class="text-[11px] text-zinc-400 mb-5 truncate max-w-xs mx-auto"></p>
+
+            <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" onclick="window.copyFixedMenuLink()" class="py-2.5 px-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-zinc-200 border border-dark-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                    <i class="fa-regular fa-copy text-gold-400"></i>
+                    <span data-i18n="copy_link">نسخ الرابط</span>
+                </button>
+                <button type="button" onclick="window.printFixedBarcode()" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 text-dark-950 text-xs font-extrabold transition flex items-center justify-center gap-1.5 shadow">
+                    <i class="fa-solid fa-print"></i>
+                    <span data-i18n="print_barcode">طباعة الباركود</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة التقارير الشاملة -->
+    <div id="reports-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden items-center justify-center p-2 sm:p-4 no-print">
+        <div class="bg-dark-900 border border-amber-500/40 rounded-3xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between pb-3 border-b border-dark-700 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-white" data-i18n="reports_center_title">مركز التقارير والإحصائيات</h3>
+                        <p class="text-[11px] text-zinc-400" data-i18n="reports_center_subtitle">تحليل الأقسام والأصناف الأكثر مبيعاً وتقارير الفترات</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeReportsModal()" class="w-9 h-9 rounded-full bg-dark-800 text-zinc-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="bg-dark-800/70 border border-dark-700 rounded-2xl p-3 mt-3 shrink-0 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" onclick="window.setReportRange('today')" class="report-preset-btn px-3 py-1.5 rounded-xl bg-amber-500 text-dark-950 text-xs font-extrabold transition" data-range="today" data-i18n="range_today">اليوم الحالي</button>
+                        <button type="button" onclick="window.setReportRange('week')" class="report-preset-btn px-3 py-1.5 rounded-xl bg-dark-900 text-zinc-300 border border-dark-700 text-xs font-bold transition" data-range="week" data-i18n="range_week">آخر 7 أيام</button>
+                        <button type="button" onclick="window.setReportRange('month')" class="report-preset-btn px-3 py-1.5 rounded-xl bg-dark-900 text-zinc-300 border border-dark-700 text-xs font-bold transition" data-range="month" data-i18n="range_month">هذا الشهر</button>
+                        <button type="button" onclick="window.setReportRange('all')" class="report-preset-btn px-3 py-1.5 rounded-xl bg-dark-900 text-zinc-300 border border-dark-700 text-xs font-bold transition" data-range="all" data-i18n="range_all">كل المسجل</button>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-xs">
+                        <span class="text-zinc-400" data-i18n="from">من:</span>
+                        <input type="date" id="report-from-date" onchange="window.generateReports()" class="bg-dark-900 border border-dark-700 rounded-lg px-2 py-1 text-white text-xs focus:border-amber-500 focus:outline-none">
+                        <span class="text-zinc-400" data-i18n="to">إلى:</span>
+                        <input type="date" id="report-to-date" onchange="window.generateReports()" class="bg-dark-900 border border-dark-700 rounded-lg px-2 py-1 text-white text-xs focus:border-amber-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mt-3 shrink-0">
+                <button type="button" id="tab-btn-categories" onclick="window.switchReportTab('categories')" class="py-2 px-3 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-400 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span data-i18n="tab_categories">تقارير الأقسام والأصناف</span>
+                </button>
+                <button type="button" id="tab-btn-financial" onclick="window.switchReportTab('financial')" class="py-2 px-3 rounded-xl bg-dark-800 border border-dark-700 text-zinc-400 hover:text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-coins"></i>
+                    <span data-i18n="tab_financial">الملخص المالي للمدة</span>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto mt-3 pr-1 space-y-5 flex-1">
+                <div id="report-tab-categories" class="space-y-5">
+                    <div class="bg-dark-800/50 border border-dark-700 rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-bar"></i> <span data-i18n="sales_by_category">تحليل المبيعات حسب القسم</span>
+                            </h4>
+                            <span id="report-cat-total-badge" class="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg">0.00 ج.م</span>
+                        </div>
+                        <div id="category-bars-container" class="space-y-3"></div>
+                    </div>
+
+                    <div class="bg-dark-800/50 border border-dark-700 rounded-2xl p-4">
+                        <h4 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-400"></i> <span data-i18n="top_selling_items">الأصناف الأكثر مبيعاً (ترتيب تنازلي)</span>
+                        </h4>
+                        <div class="overflow-x-auto rounded-xl border border-dark-700">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="bg-dark-900 text-zinc-400 text-xs border-b border-dark-700">
+                                        <th class="py-2.5 px-3 font-semibold">#</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="item">الصنف</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="category">القسم</th>
+                                        <th class="py-2.5 px-3 font-semibold text-center" data-i18n="sold_qty">الكمية المباعة</th>
+                                        <th class="py-2.5 px-3 font-semibold" data-i18n="total_income">إجمالي الدخل</th>
+                                        <th class="py-2.5 px-3 font-semibold text-center" data-i18n="percentage">النسبة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-items-table-body" class="divide-y divide-dark-800 text-xs sm:text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="report-tab-financial" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="bg-dark-800 border border-dark-700 rounded-2xl p-3.5">
+                            <span class="block text-[11px] text-zinc-400" data-i18n="total_sales">إجمالي المبيعات</span>
+                            <span id="rep-fin-sales" class="text-lg font-extrabold text-emerald-400">0.00 ج.م</span>
+                        </div>
+                        <div class="bg-dark-800 border border-dark-700 rounded-2xl p-3.5">
+                            <span class="block text-[11px] text-zinc-400" data-i18n="cash_visa">كاش / فيزا</span>
+                            <div class="text-xs font-bold mt-1">
+                                <span id="rep-fin-cash" class="text-emerald-300">0</span> / <span id="rep-fin-visa" class="text-sky-400">0</span>
+                            </div>
+                        </div>
+                        <div class="bg-dark-800 border border-dark-700 rounded-2xl p-3.5">
+                            <span class="block text-[11px] text-zinc-400" data-i18n="total_expenses">إجمالي المصاريف</span>
+                            <span id="rep-fin-exp" class="text-lg font-extrabold text-rose-400">0.00 ج.م</span>
+                        </div>
+                        <div class="bg-dark-800 border border-amber-500/40 rounded-2xl p-3.5">
+                            <span class="block text-[11px] text-amber-400" data-i18n="period_net_profit">صافي ربح الفترة</span>
+                            <span id="rep-fin-net" class="text-lg font-extrabold text-white">0.00 ج.م</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-800/50 border border-dark-700 rounded-2xl p-4">
+                        <h4 class="text-sm font-bold text-zinc-300 mb-3"><span data-i18n="days_details">تفصيل الأيام المسجلة في الفترة</span> (<span id="rep-days-count">0</span> <span data-i18n="day_unit">يوم</span>)</h4>
+                        <div class="overflow-x-auto rounded-xl border border-dark-700">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="bg-dark-900 text-zinc-400 text-xs border-b border-dark-700">
+                                        <th class="py-2 px-3" data-i18n="date">التاريخ</th>
+                                        <th class="py-2 px-3" data-i18n="sales">المبيعات</th>
+                                        <th class="py-2 px-3" data-i18n="expenses">المصاريف</th>
+                                        <th class="py-2 px-3" data-i18n="net">الصافي</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rep-days-table-body" class="divide-y divide-dark-800 text-xs"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-3 mt-3 border-t border-dark-700 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <button type="button" onclick="window.printReportDocument()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span data-i18n="print_pdf_btn">طباعة / حفظ PDF للتقرير</span>
+                </button>
+                <button type="button" onclick="window.closeReportsModal()" class="px-5 py-2.5 bg-dark-800 hover:bg-dark-700 text-zinc-300 rounded-xl text-xs sm:text-sm font-bold transition" data-i18n="close">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تثبيت التطبيق -->
+    <div id="install-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-dark-900 border-2 border-indigo-500/50 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <button type="button" onclick="window.closeInstallModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-dark-800 text-zinc-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-dark-950 flex items-center justify-center text-2xl font-extrabold mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-white text-center mb-1" data-i18n="install_modal_title">تثبيت التطبيق على الموبايل</h3>
+            <p class="text-xs text-zinc-400 text-center mb-4" data-i18n="install_modal_subtitle">حوّل النظام إلى تطبيق مستقل بأيقونة على شاشتك الرئيسية ويعمل بدون إنترنت</p>
+            <button type="button" id="pwa-direct-install-btn" onclick="window.triggerPwaInstall()" class="hidden w-full mb-4 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-dark-950 font-extrabold text-sm shadow-lg flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-download"></i>
+                <span data-i18n="install_now_btn">تثبيت التطبيق الآن بضغطة واحدة</span>
+            </button>
+            <div class="space-y-3 text-right">
+                <div class="bg-dark-800/80 border border-dark-700 rounded-2xl p-3.5">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs mb-1.5">
+                        <i class="fa-brands fa-android text-base"></i>
+                        <span data-i18n="android_steps_title">هواتف أندرويد (متصفح Chrome):</span>
+                    </div>
+                    <ol class="text-xs text-zinc-300 space-y-1 list-decimal list-inside leading-relaxed">
+                        <li data-i18n="android_step_1">اضغط على قائمة النقاط الثلاث <strong class="text-white">( ⋮ )</strong> أعلى المتصفح.</li>
+                        <li data-i18n="android_step_2">اختر <strong class="text-amber-400">"الإضافة إلى الشاشة الرئيسية"</strong>.</li>
+                        <li data-i18n="android_step_3">اضغط <strong class="text-white">تثبيت (Install)</strong> وسيظهر التطبيق فوراً.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة التحقق من الرقم السري PIN -->
+    <div id="pin-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] hidden items-center justify-center p-4 no-print">
+        <div class="bg-dark-900 border-2 border-amber-500/60 rounded-3xl max-w-xs w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl mx-auto mb-3">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-white mb-1" data-i18n="pin_modal_title">منطقة محمية برقم سري</h3>
+            <p class="text-xs text-zinc-400 mb-4" data-i18n="pin_modal_subtitle">أدخل الرقم السري (4 أرقام) للمتابعة</p>
+            <input type="password" id="pin-verify-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••"
+                class="w-full bg-dark-950 border-2 border-dark-700 focus:border-amber-500 rounded-2xl py-3 px-4 text-center text-2xl tracking-[0.6em] font-extrabold text-amber-400 focus:outline-none mb-2">
+            <p id="pin-error-msg" class="hidden text-xs text-rose-400 font-bold mb-3" data-i18n="pin_error">الرقم السري غير صحيح!</p>
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <button type="button" onclick="window.submitPinVerify()" class="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-extrabold text-xs transition" data-i18n="confirm">تأكيد</button>
+                <button type="button" onclick="window.closePinModal()" class="py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-zinc-300 font-bold text-xs transition" data-i18n="cancel">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إدارة الأصناف مع خيار رفع/تعديل صورة الصنف -->
+    <div id="manage-items-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-dark-900 border border-dark-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between mb-4 shrink-0">
+                <h3 class="text-base sm:text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-mug-hot"></i> <span data-i18n="manage_items_title">إدارة الأصناف والأقسام والصور</span></h3>
+                <button type="button" onclick="window.closeManageItemsModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="custom-item-form" class="space-y-3 bg-dark-800/70 p-4 rounded-xl border border-dark-700 mb-4 shrink-0">
+                <input type="hidden" id="preset-edit-index" value="-1">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-5">
+                        <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="item_name_req">اسم الصنف *</label>
+                        <input type="text" id="new-preset-name" required placeholder="مثال: كابتشينو..." class="w-full bg-dark-900 border border-dark-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
+                    </div>
+                    <div class="sm:col-span-4">
+                        <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="category">القسم</label>
+                        <input type="text" id="new-preset-category" list="categories-datalist" placeholder="القسم..." class="w-full bg-dark-900 border border-dark-700 rounded-xl px-3 py-2 text-sm text-amber-300 focus:outline-none">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="price">السعر</label>
+                        <input type="number" id="new-preset-price" step="0.5" min="0" placeholder="0" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-2 py-2 text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center pt-1">
+                    <div class="sm:col-span-5">
+                        <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="currency">العملة</label>
+                        <select id="new-preset-currency" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-2 py-2 text-sm text-amber-400 font-bold focus:outline-none">
+                            <option value="EGP">ج.م</option>
+                            <option value="USD">$</option>
+                            <option value="EUR">€</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-7">
+                        <label class="block text-[11px] text-zinc-400 mb-1" data-i18n="item_image_label">صورة الصنف (اختياري)</label>
+                        <div class="flex items-center gap-2">
+                            <label class="flex-1 px-3 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-700 text-amber-400 border border-dark-700 text-xs font-bold cursor-pointer text-center truncate transition">
+                                <i class="fa-solid fa-camera ml-1"></i> <span id="preset-img-filename" data-i18n="choose_image">اختر صورة...</span>
+                                <input type="file" id="new-preset-image-input" accept="image/*" class="hidden">
+                            </label>
+                            <button type="button" id="remove-preset-img-btn" onclick="window.removePresetImage()" class="hidden px-2.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-400 text-xs font-bold" data-i18n="delete">حذف</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                    <button type="submit" id="preset-submit-btn" class="flex-1 bg-amber-500 hover:bg-amber-400 text-dark-950 font-bold py-2 rounded-xl text-xs sm:text-sm transition" data-i18n="add_new_item_btn">إضافة صنف جديد</button>
+                    <button type="button" id="preset-cancel-edit" onclick="window.resetPresetForm()" class="hidden px-3.5 py-2 bg-dark-700 text-zinc-300 rounded-xl text-xs" data-i18n="cancel">إغلاق</button>
+                </div>
+            </form>
+            <div class="flex items-center justify-between mb-2 shrink-0">
+                <span class="text-xs font-bold text-zinc-300"><span data-i18n="saved_items_count">الأصناف المحفوظة</span> (<span id="presets-modal-count">0</span>)</span>
+                <button type="button" onclick="window.restoreDefaultPresets()" class="text-[11px] text-zinc-400 hover:text-amber-400 underline" data-i18n="restore_defaults">استعادة المنيو الافتراضي الكامل</button>
+            </div>
+            <div id="manage-presets-list" class="overflow-y-auto space-y-2 pr-1 flex-1"></div>
+        </div>
+    </div>
+
+    <!-- نافذة يوم جديد -->
+    <div id="new-day-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-dark-900 border border-dark-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-calendar-plus"></i> <span data-i18n="new_day_title">بدء يوم عمل جديد</span></h3>
+                <button type="button" onclick="window.closeNewDayModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-sm text-zinc-300 leading-relaxed mb-5" data-i18n="new_day_desc">اختر الطريقة المناسبة لبدء اليوم الجديد:</p>
+            <div class="space-y-3">
+                <button type="button" onclick="window.startNewDay(true)" class="w-full p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 hover:bg-amber-500/20 text-right rtl:text-right ltr:text-left transition">
+                    <div class="font-bold text-amber-400 text-sm flex items-center justify-between">
+                        <span data-i18n="carryover_option">1. ترحيل صافي الدرج كعهدة لليوم الجديد</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </div>
+                    <p class="text-xs text-zinc-400 mt-1"><span data-i18n="carryover_desc1">المبلغ المتبقي حالياً</span> (<span id="modal-carryover-amount" class="text-white font-bold">0</span>) <span data-i18n="carryover_desc2">عهدة لليوم التالي.</span></p>
+                </button>
+                <button type="button" onclick="window.safeRequirePin(() => window.startNewDay(false))" class="w-full p-3.5 rounded-xl bg-dark-800 border border-dark-700 text-right rtl:text-right ltr:text-left transition">
+                    <div class="font-bold text-white text-sm" data-i18n="zero_option">2. تصفير اليوم الحالي والبدء من الصفر (0.00)</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الإعدادات -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-dark-900 border border-dark-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="flex items-center justify-between mb-4 shrink-0">
+                <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-sliders"></i> <span data-i18n="settings_modal_title">الإعدادات والنسخ الاحتياطي</span></h3>
+                <button type="button" onclick="window.closeSettingsModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="settings-form" class="space-y-4 overflow-y-auto pr-1 flex-1">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-2" data-i18n="logo_label">شعار النشاط التجاري (Logo)</label>
+                    <div class="flex items-center gap-4 bg-dark-800/70 p-3 rounded-xl border border-dark-700">
+                        <div class="w-14 h-14 rounded-xl bg-dark-900 border border-dark-600 flex items-center justify-center overflow-hidden shrink-0">
+                            <img id="settings-logo-preview" src="" alt="Preview" class="hidden w-full h-full object-cover">
+                            <i id="settings-logo-placeholder" class="fa-solid fa-image text-zinc-500 text-xl"></i>
+                        </div>
+                        <div class="flex-1 space-y-1.5">
+                            <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-dark-950 font-bold text-xs cursor-pointer transition">
+                                <i class="fa-solid fa-upload"></i> <span data-i18n="choose_logo">اختر الشعار</span>
+                                <input type="file" id="logo-file-input" accept="image/*" class="hidden">
+                            </label>
+                            <button type="button" id="remove-logo-btn" onclick="window.removeLogo()" class="hidden block text-xs text-rose-400" data-i18n="remove_logo">حذف الشعار</button>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1" data-i18n="business_name_label">اسم المكان / النشاط التجاري</label>
+                    <input type="text" id="settings-business-name" class="w-full bg-dark-800 border border-dark-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1" data-i18n="whatsapp_label">رقم واتساب لاستلام التقارير</label>
+                    <input type="text" id="settings-whatsapp" dir="ltr" class="w-full bg-dark-800 border border-dark-700 rounded-xl px-3.5 py-2 text-sm text-emerald-400 font-bold text-left focus:outline-none">
+                </div>
+                <div class="bg-dark-800/70 border border-amber-500/30 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-lock"></i><span data-i18n="pin_label">قفل الحماية (PIN من 4 أرقام)</span></label>
+                        <span id="pin-status-label" class="text-[11px] text-zinc-400" data-i18n="pin_disabled">غير مفعل</span>
+                    </div>
+                    <input type="password" id="settings-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="أدخل 4 أرقام"
+                        class="w-full bg-dark-900 border border-dark-700 rounded-xl px-3.5 py-2 text-sm text-amber-300 font-bold tracking-widest text-center focus:outline-none">
+                </div>
+                <div class="bg-dark-800/70 border border-dark-700 rounded-xl p-3.5 space-y-2.5">
+                    <label class="block text-xs font-bold text-zinc-200 flex items-center gap-1.5"><i class="fa-solid fa-database text-sky-400"></i><span data-i18n="backup_label">النسخ الاحتياطي واستعادة البيانات</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="window.exportBackupData()" class="py-2 px-3 rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/30 text-xs font-bold transition" data-i18n="export_json">تصدير نسخة JSON</button>
+                        <label class="py-2 px-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-bold cursor-pointer text-center">
+                            <span data-i18n="restore_backup">استعادة نسخة</span> <input type="file" id="restore-backup-input" accept=".json" class="hidden" onchange="window.importBackupData(event)">
+                        </label>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pt-2 sticky bottom-0 bg-dark-900 pb-1">
+                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-dark-950 font-bold py-2.5 rounded-xl text-sm transition" data-i18n="save_settings">حفظ الإعدادات</button>
+                    <button type="button" onclick="window.closeSettingsModal()" class="px-4 py-2.5 bg-dark-800 text-zinc-300 rounded-xl text-sm" data-i18n="close">إغلاق</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const TRANSLATIONS = {
+            ar: {
+                exchange: "الصرف:", currency_egp: "ج.م", menu_cart: "منيو العملاء والسلة", menu_barcode: "باركود المنيو",
+                reports: "التقارير", install: "تثبيت", settings: "الإعدادات", new_day: "يوم جديد",
+                opening_cash: "العهدة الافتتاحية", opening_cash_desc: "رصيد بداية اليوم بالدرج", total_sales: "إجمالي المبيعات",
+                visa_sales: "مبيعات الفيزا (البنك)", cash_sales_sub: "مبيعات الكاش:", total_expenses: "إجمالي المصاريف",
+                net_profit: "صافي ربح اليوم", net_profit_desc: "إجمالي المبيعات - المصاريف", drawer_cash: "المتبقي بالدرج (كاش فعلي)",
+                pending_orders_label: "أوردرات معلقة:", sales_section_title: "تسجيل الطلبات والمبيعات", open_menu_btn: "فتح المنيو والطلب",
+                manage_items_btn: "إدارة الأصناف", item_name: "اسم الصنف", category: "القسم", qty: "الكمية", currency: "العملة",
+                unit_price: "سعر الوحدة", client_note: "العميل / الطاولة / ملاحظة", total_egp: "الإجمالي بالمصري",
+                extras_toggle: "إضافة خصم أو خدمة / ضريبة (اختياري)", discount: "الخصم", disc_amount: "مبلغ",
+                tax_service: "نسبة الخدمة / الضريبة (%)", payment_status: "حالة السداد:", paid_status: "سدد (يضاف للمبيعات)",
+                unpaid_status: "لم يسدد (أوردر معلق)", payment_method: "طريقة التحصيل:", cash_method: "كاش (يدخل الدرج)",
+                visa_method: "فيزا / بطاقة (البنك)", submit_order_btn: "تسجيل الطلب", cancel: "إلغاء",
+                pending_orders_title: "الأوردرات المعلقة - لم تُسدد", th_item_client: "الصنف والعميل", th_qty: "الكمية",
+                th_value: "القيمة", th_egp: "بالمصري", th_action: "تأكيد السداد / إجراء", collected_sales_title: "سجل المبيعات المحصلة",
+                th_item_payment: "الصنف وطريقة الدفع", th_equivalent: "المعادل (ج.م)", th_actions: "إجراءات",
+                expenses_section_title: "تسجيل المصاريف", expenses_badge: "نثريات / خامات / يوميات", exp_desc_label: "بيان المصروف / السبب",
+                amount: "المبلغ", in_egp: "بالمصري", submit_expense_btn: "تسجيل مصروف", expenses_log_title: "سجل مصاريف اليوم",
+                th_statement: "البيان", th_amount: "المبلغ", th_delete: "حذف", customer_menu_title: "قائمة المشروبات والمنيو الإلكتروني",
+                customer_menu_subtitle: "اختر مشروباتك المفضلة وأضفها إلى السلة للطلب الفوري", cart_btn: "السلة", search_placeholder: "ابحث عن مشروب...",
+                cart_title: "سلة الطلبات", table_client_label: "رقم الطاولة / اسم العميل", notes_label: "ملاحظات إضافية (سكر، ثلج...)",
+                total: "الإجمالي:", send_to_cashier_btn: "إرسال الطلب إلى الكاشير", barcode_modal_title: "الباركود الثابت للمنيو الإلكتروني",
+                barcode_modal_subtitle: "امسح الكود بكاميرا الموبايل لفتح المنيو والطلب مباشرة", copy_link: "نسخ الرابط", print_barcode: "طباعة الباركود",
+                reports_center_title: "مركز التقارير والإحصائيات", reports_center_subtitle: "تحليل الأقسام والأصناف الأكثر مبيعاً وتقارير الفترات",
+                range_today: "اليوم الحالي", range_week: "آخر 7 أيام", range_month: "هذا الشهر", range_all: "كل المسجل",
+                from: "من:", to: "إلى:", tab_categories: "تقارير الأقسام والأصناف", tab_financial: "الملخص المالي للمدة",
+                sales_by_category: "تحليل المبيعات حسب القسم", top_selling_items: "الأصناف الأكثر مبيعاً (ترتيب تنازلي)", item: "الصنف",
+                sold_qty: "الكمية المباعة", total_income: "إجمالي الدخل", percentage: "النسبة", cash_visa: "كاش / فيزا",
+                period_net_profit: "صافي ربح الفترة", days_details: "تفصيل الأيام المسجلة في الفترة", day_unit: "يوم",
+                date: "التاريخ", sales: "المبيعات", expenses: "المصاريف", net: "الصافي", print_pdf_btn: "طباعة / حفظ PDF للتقرير",
+                close: "إغلاق", install_modal_title: "تثبيت التطبيق على الموبايل", install_modal_subtitle: "حوّل النظام إلى تطبيق مستقل بأيقونة على شاشتك الرئيسية ويعمل بدون إنترنت",
+                install_now_btn: "تثبيت التطبيق الآن بضغطة واحدة", android_steps_title: "هواتف أندرويد (متصفح Chrome):",
+                android_step_1: "اضغط على قائمة النقاط الثلاث ( ⋮ ) أعلى المتصفح.", android_step_2: "اختر \"الإضافة إلى الشاشة الرئيسية\".",
+                android_step_3: "اضغط تثبيت (Install) وسيظهر التطبيق فوراً.", pin_modal_title: "منطقة محمية برقم سري",
+                pin_modal_subtitle: "أدخل الرقم السري (4 أرقام) للمتابعة", pin_error: "الرقم السري غير صحيح!", confirm: "تأكيد",
+                manage_items_title: "إدارة الأصناف والأقسام والصور", item_name_req: "اسم الصنف *", price: "السعر",
+                item_image_label: "صورة الصنف (اختياري)", choose_image: "اختر صورة...", delete: "حذف", add_new_item_btn: "إضافة صنف جديد",
+                saved_items_count: "الأصناف المحفوظة", restore_defaults: "استعادة المنيو الافتراضي الكامل", new_day_title: "بدء يوم عمل جديد",
+                new_day_desc: "اختر الطريقة المناسبة لبدء اليوم الجديد:", carryover_option: "1. ترحيل صافي الدرج كعهدة لليوم الجديد",
+                carryover_desc1: "المبلغ المتبقي حالياً", carryover_desc2: "عهدة لليوم التالي.", zero_option: "2. تصفير اليوم الحالي والبدء من الصفر (0.00)",
+                settings_modal_title: "الإعدادات والنسخ الاحتياطي", logo_label: "شعار النشاط التجاري (Logo)", choose_logo: "اختر الشعار",
+                remove_logo: "حذف الشعار", business_name_label: "اسم المكان / النشاط التجاري", whatsapp_label: "رقم واتساب لاستلام التقارير",
+                pin_label: "قفل الحماية (PIN من 4 أرقام)", pin_disabled: "غير مفعل", backup_label: "النسخ الاحتياطي واستعادة البيانات",
+                export_json: "تصدير نسخة JSON", restore_backup: "استعادة نسخة", save_settings: "حفظ الإعدادات"
+            },
+            en: {
+                exchange: "Ex. Rate:", currency_egp: "EGP", menu_cart: "Customer Menu & Cart", menu_barcode: "Menu Barcode",
+                reports: "Reports", install: "Install", settings: "Settings", new_day: "New Day",
+                opening_cash: "Opening Vault Cash", opening_cash_desc: "Starting cash in drawer", total_sales: "Total Sales",
+                visa_sales: "Visa Sales (Bank)", cash_sales_sub: "Cash Sales:", total_expenses: "Total Expenses",
+                net_profit: "Today's Net Profit", net_profit_desc: "Total Sales - Expenses", drawer_cash: "Drawer Cash (Actual)",
+                pending_orders_label: "Pending Orders:", sales_section_title: "Orders & Sales Registration", open_menu_btn: "Open Menu & Order",
+                manage_items_btn: "Manage Items", item_name: "Item Name", category: "Category", qty: "Qty", currency: "Currency",
+                unit_price: "Unit Price", client_note: "Client / Table / Note", total_egp: "Total in EGP",
+                extras_toggle: "Add Discount or Tax / Service (Optional)", discount: "Discount", disc_amount: "Amount",
+                tax_service: "Service / Tax (%)", payment_status: "Payment Status:", paid_status: "Paid (Added to Sales)",
+                unpaid_status: "Unpaid (Pending Order)", payment_method: "Collection Method:", cash_method: "Cash (Drawer)",
+                visa_method: "Visa / Card (Bank)", submit_order_btn: "Register Order", cancel: "Cancel",
+                pending_orders_title: "Pending Orders - Unpaid", th_item_client: "Item & Client", th_qty: "Qty",
+                th_value: "Value", th_egp: "In EGP", th_action: "Confirm / Action", collected_sales_title: "Collected Sales Log",
+                th_item_payment: "Item & Payment Method", th_equivalent: "Equivalent (EGP)", th_actions: "Actions",
+                expenses_section_title: "Register Expenses", expenses_badge: "Incidental / Supplies / Wages", exp_desc_label: "Expense Description / Reason",
+                amount: "Amount", in_egp: "In EGP", submit_expense_btn: "Register Expense", expenses_log_title: "Today's Expenses Log",
+                th_statement: "Statement", th_amount: "Amount", th_delete: "Delete", customer_menu_title: "Beverage Menu & E-Ordering",
+                customer_menu_subtitle: "Choose your favorite drinks and add them to cart for instant ordering", cart_btn: "Cart", search_placeholder: "Search for a drink...",
+                cart_title: "Order Cart", table_client_label: "Table No. / Client Name", notes_label: "Extra notes (sugar, ice...)",
+                total: "Total:", send_to_cashier_btn: "Send Order to Cashier", barcode_modal_title: "E-Menu Static Barcode",
+                barcode_modal_subtitle: "Scan code with mobile camera to open menu and order directly", copy_link: "Copy Link", print_barcode: "Print Barcode",
+                reports_center_title: "Reports & Analytics Center", reports_center_subtitle: "Analyze categories, top selling items, and periodic reports",
+                range_today: "Today", range_week: "Last 7 Days", range_month: "This Month", range_all: "All Records",
+                from: "From:", to: "To:", tab_categories: "Categories & Items Reports", tab_financial: "Financial Summary",
+                sales_by_category: "Sales Analysis by Category", top_selling_items: "Top Selling Items (Descending)", item: "Item",
+                sold_qty: "Sold Qty", total_income: "Total Income", percentage: "Percentage", cash_visa: "Cash / Visa",
+                period_net_profit: "Period Net Profit", days_details: "Detailed Days in Period", day_unit: "days",
+                date: "Date", sales: "Sales", expenses: "Expenses", net: "Net", print_pdf_btn: "Print / Save PDF Report",
+                close: "Close", install_modal_title: "Install App on Mobile", install_modal_subtitle: "Turn system into a standalone app with home screen icon working offline",
+                install_now_btn: "Install App Now in 1 Click", android_steps_title: "Android Phones (Chrome Browser):",
+                android_step_1: "Tap the three dots menu ( ⋮ ) at the top of browser.", android_step_2: "Select \"Add to Home Screen\".",
+                android_step_3: "Tap \"Install\" and the app will appear instantly.", pin_modal_title: "Protected PIN Area",
+                pin_modal_subtitle: "Enter 4-digit PIN to proceed", pin_error: "Incorrect PIN!", confirm: "Confirm",
+                manage_items_title: "Manage Items, Categories & Images", item_name_req: "Item Name *", price: "Price",
+                item_image_label: "Item Image (Optional)", choose_image: "Choose image...", delete: "Delete", add_new_item_btn: "Add New Item",
+                saved_items_count: "Saved Items", restore_defaults: "Restore Full Default Menu", new_day_title: "Start New Work Day",
+                new_day_desc: "Choose appropriate method to start new day:", carryover_option: "1. Carry over drawer net cash as vault for new day",
+                carryover_desc1: "Remaining amount currently", carryover_desc2: "as vault for next day.", zero_option: "2. Reset current day and start from zero (0.00)",
+                settings_modal_title: "Settings & Backup", logo_label: "Business Logo", choose_logo: "Choose Logo",
+                remove_logo: "Remove Logo", business_name_label: "Business / Venue Name", whatsapp_label: "WhatsApp Number for Reports",
+                pin_label: "Security Lock (4-digit PIN)", pin_disabled: "Disabled", backup_label: "Backup & Data Restoration",
+                export_json: "Export JSON Backup", restore_backup: "Restore Backup", save_settings: "Save Settings"
+            },
+            de: {
+                exchange: "Kurs:", currency_egp: "EGP", menu_cart: "Kundenmenü & Warenkorb", menu_barcode: "Menü-Barcode",
+                reports: "Berichte", install: "Installieren", settings: "Einstellungen", new_day: "Neuer Tag",
+                opening_cash: "Eröffnungskasse", opening_cash_desc: "Startbestand in der Kasse", total_sales: "Gesamtumsatz",
+                visa_sales: "Visa-Umsatz (Bank)", cash_sales_sub: "Barumsatz:", total_expenses: "Gesamtausgaben",
+                net_profit: "Heutiger Nettogewinn", net_profit_desc: "Gesamtumsatz - Ausgaben", drawer_cash: "Kassenbestand (Aktuell)",
+                pending_orders_label: "Ausstehende Bestellungen:", sales_section_title: "Bestell- & Verkaufserfassung", open_menu_btn: "Menü & Bestellung öffnen",
+                manage_items_btn: "Artikel verwalten", item_name: "Artikelname", category: "Kategorie", qty: "Menge", currency: "Währung",
+                unit_price: "Stückpreis", client_note: "Kunde / Tisch / Notiz", total_egp: "Gesamt in EGP",
+                extras_toggle: "Rabatt oder Service / Steuer hinzufügen (Optional)", discount: "Rabatt", disc_amount: "Betrag",
+                tax_service: "Service / Steuer (%)", payment_status: "Zahlungsstatus:", paid_status: "Bezahlt (Zum Umsatz hinzugefügt)",
+                unpaid_status: "Unbezahlt (Ausstehend)", payment_method: "Zahlungsart:", cash_method: "Bar (Kasse)",
+                visa_method: "Visa / Karte (Bank)", submit_order_btn: "Bestellung erfassen", cancel: "Abbrechen",
+                pending_orders_title: "Ausstehende Bestellungen - Unbezahlt", th_item_client: "Artikel & Kunde", th_qty: "Menge",
+                th_value: "Wert", th_egp: "In EGP", th_action: "Bestätigen / Aktion", collected_sales_title: "Umsatzprotokoll",
+                th_item_payment: "Artikel & Zahlungsart", th_equivalent: "Entsprechend (EGP)", th_actions: "Aktionen",
+                expenses_section_title: "Ausgaben erfassen", expenses_badge: "Nebenkosten / Material / Löhne", exp_desc_label: "Ausgabenbeschreibung / Grund",
+                amount: "Betrag", in_egp: "In EGP", submit_expense_btn: "Ausgabe erfassen", expenses_log_title: "Heutiges Ausgabenprotokoll",
+                th_statement: "Beschreibung", th_amount: "Betrag", th_delete: "Löschen", customer_menu_title: "Getränkekarte & E-Bestellung",
+                customer_menu_subtitle: "Wählen Sie Ihre Lieblingsgetränke für die Sofortbestellung", cart_btn: "Warenkorb", search_placeholder: "Getränk suchen...",
+                cart_title: "Bestellkorb", table_client_label: "Tisch-Nr. / Kundenname", notes_label: "Zusätzliche Notizen (Zucker, Eis...)",
+                total: "Gesamt:", send_to_cashier_btn: "Bestellung an Kasse senden", barcode_modal_title: "Statische E-Menü-Barcode",
+                barcode_modal_subtitle: "Scannen Sie den Code mit der Handykamera", copy_link: "Link kopieren", print_barcode: "Barcode drucken",
+                reports_center_title: "Berichte & Statistik", reports_center_subtitle: "Kategorien, Bestseller und Berichte analysieren",
+                range_today: "Heute", range_week: "Letzte 7 Tage", range_month: "Diesen Monat", range_all: "Alle Einträge",
+                from: "Von:", to: "Bis:", tab_categories: "Kategorien & Artikel", tab_financial: "Finanzübersicht",
+                sales_by_category: "Umsatz nach Kategorie", top_selling_items: "Bestseller (Absteigend)", item: "Artikel",
+                sold_qty: "Verkaufte Menge", total_income: "Gesamteinnahmen", percentage: "Prozent", cash_visa: "Bar / Visa",
+                period_net_profit: "Nettogewinn (Zeitraum)", days_details: "Tagedetails", day_unit: "Tage",
+                date: "Datum", sales: "Umsatz", expenses: "Ausgaben", net: "Netto", print_pdf_btn: "PDF-Bericht drucken / speichern",
+                close: "Schließen", install_modal_title: "App auf Mobilgerät installieren", install_modal_subtitle: "System als eigenständige App mit Startbildschirm-Symbol nutzen",
+                install_now_btn: "App jetzt mit 1 Klick installieren", android_steps_title: "Android Handys (Chrome Browser):",
+                android_step_1: "Tippen Sie auf das Drei-Punkte-Menü ( ⋮ ) oben im Browser.", android_step_2: "Wählen Sie \"Zum Startbildschirm hinzufügen\".",
+                android_step_3: "Tippen Sie auf \"Installieren\".", pin_modal_title: "PIN-geschützter Bereich",
+                pin_modal_subtitle: "4-stellige PIN eingeben", pin_error: "Falsche PIN!", confirm: "Bestätigen",
+                manage_items_title: "Artikel, Kategorien & Bilder verwalten", item_name_req: "Artikelname *", price: "Preis",
+                item_image_label: "Artikelbild (Optional)", choose_image: "Bild wählen...", delete: "Löschen", add_new_item_btn: "Neuen Artikel hinzufügen",
+                saved_items_count: "Gespeicherte Artikel", restore_defaults: "Standardmenü wiederherstellen", new_day_title: "Neuen Arbeitstag beginnen",
+                new_day_desc: "Methode für neuen Tag wählen:", carryover_option: "1. Kassenbestand als Kassenreserve übertragen",
+                carryover_desc1: "Aktueller Restbetrag", carryover_desc2: "als Reserve für den nächsten Tag.", zero_option: "2. Aktuellen Tag zurücksetzen und bei 0 starten (0.00)",
+                settings_modal_title: "Einstellungen & Backup", logo_label: "Geschäftslogo", choose_logo: "Logo wählen",
+                remove_logo: "Logo entfernen", business_name_label: "Geschäftsname", whatsapp_label: "WhatsApp-Nummer für Berichte",
+                pin_label: "Sicherheitssperre (4-stellige PIN)", pin_disabled: "Deaktiviert", backup_label: "Backup & Datenwiederherstellung",
+                export_json: "JSON-Backup exportieren", restore_backup: "Backup wiederherstellen", save_settings: "Einstellungen speichern"
+            },
+            fr: {
+                exchange: "Taux:", currency_egp: "EGP", menu_cart: "Menu Client & Panier", menu_barcode: "Code-barres du Menu",
+                reports: "Rapports", install: "Installer", settings: "Paramètres", new_day: "Nouveau Jour",
+                opening_cash: "Fond de Caisse Initial", opening_cash_desc: "Solde initial dans le tiroir", total_sales: "Ventes Totales",
+                visa_sales: "Ventes Visa (Banque)", cash_sales_sub: "Ventes Espèces:", total_expenses: "Dépenses Totales",
+                net_profit: "Bénéfice Net du Jour", net_profit_desc: "Ventes Totales - Dépenses", drawer_cash: "Espèces en Caisse (Actuel)",
+                pending_orders_label: "Commandes en attente:", sales_section_title: "Enregistrement des Commandes et Ventes", open_menu_btn: "Ouvrir le Menu & Commander",
+                manage_items_btn: "Gérer les Articles", item_name: "Nom de l'article", category: "Catégorie", qty: "Qté", currency: "Devise",
+                unit_price: "Prix Unitaire", client_note: "Client / Table / Note", total_egp: "Total en EGP",
+                extras_toggle: "Ajouter Remise ou Taxe / Service (Optionnel)", discount: "Remise", disc_amount: "Montant",
+                tax_service: "Service / Taxe (%)", payment_status: "Statut de Paiement:", paid_status: "Payé (Ajouté aux Ventes)",
+                unpaid_status: "Impayé (En attente)", payment_method: "Mode de Paiement:", cash_method: "Espèces (Tiroir)",
+                visa_method: "Visa / Carte (Banque)", submit_order_btn: "Enregistrer la Commande", cancel: "Annuler",
+                pending_orders_title: "Commandes en attente - Impayées", th_item_client: "Article & Client", th_qty: "Qté",
+                th_value: "Valeur", th_egp: "En EGP", th_action: "Confirmer / Action", collected_sales_title: "Journal des Ventes Encaissées",
+                th_item_payment: "Article & Mode de Paiement", th_equivalent: "Équivalent (EGP)", th_actions: "Actions",
+                expenses_section_title: "Enregistrer les Dépenses", expenses_badge: "Divers / Fournitures / Salaires", exp_desc_label: "Description de la dépense / Motif",
+                amount: "Montant", in_egp: "En EGP", submit_expense_btn: "Enregistrer la Dépense", expenses_log_title: "Journal des Dépenses du Jour",
+                th_statement: "Libellé", th_amount: "Montant", th_delete: "Supprimer", customer_menu_title: "Menu des Boissons et Commande Électronique",
+                customer_menu_subtitle: "Choisissez vos boissons préférées et ajoutez-les au panier", cart_btn: "Panier", search_placeholder: "Rechercher une boisson...",
+                cart_title: "Panier de Commandes", table_client_label: "N° de Table / Nom du Client", notes_label: "Notes supplémentaires (sucre, glaçons...)",
+                total: "Total:", send_to_cashier_btn: "Envoyer la Commande au Caissier", barcode_modal_title: "Code-barres Statique du Menu",
+                barcode_modal_subtitle: "Scannez le code avec la caméra pour commander directement", copy_link: "Copier le Lien", print_barcode: "Imprimer le Code-barres",
+                reports_center_title: "Centre de Rapports et Statistiques", reports_center_subtitle: "Analyser les catégories, articles populaires et rapports périodiques",
+                range_today: "Aujourd'hui", range_week: "7 Derniers Jours", range_month: "Ce Mois", range_all: "Tous les Enregistrements",
+                from: "De:", to: "À:", tab_categories: "Rapports par Catégories", tab_financial: "Résumé Financier",
+                sales_by_category: "Analyse des Ventes par Catégorie", top_selling_items: "Articles les Plus Vendus (Décroissant)", item: "Article",
+                sold_qty: "Qté Vendue", total_income: "Revenu Total", percentage: "Pourcentage", cash_visa: "Espèces / Visa",
+                period_net_profit: "Bénéfice Net de la Période", days_details: "Détails des Jours de la Période", day_unit: "jours",
+                date: "Date", sales: "Ventes", expenses: "Dépenses", net: "Net", print_pdf_btn: "Imprimer / Enregistrer PDF",
+                close: "Fermer", install_modal_title: "Installer l'Application sur Mobile", install_modal_subtitle: "Transformer en application autonome avec icône sur l'écran d'accueil",
+                install_now_btn: "Installer l'Application en 1 Clic", android_steps_title: "Téléphones Android (Navigateur Chrome):",
+                android_step_1: "Appuyez sur le menu à trois points ( ⋮ ) en haut du navigateur.", android_step_2: "Sélectionnez \"Ajouter à l'écran d'accueil\".",
+                android_step_3: "Appuyez sur \"Installer\".", pin_modal_title: "Zone Protégée par PIN",
+                pin_modal_subtitle: "Entrez le PIN à 4 chiffres", pin_error: "PIN incorrect !", confirm: "Confirmer",
+                manage_items_title: "Gérer les Articles, Catégories et Images", item_name_req: "Nom de l'article *", price: "Prix",
+                item_image_label: "Image de l'article (Optionnel)", choose_image: "Choisir une image...", delete: "Supprimer", add_new_item_btn: "Ajouter un Nouvel Article",
+                saved_items_count: "Articles Enregistrés", restore_defaults: "Restaurer le Menu par Défaut", new_day_title: "Commencer une Nouvelle Journée",
+                new_day_desc: "Choisissez la méthode pour commencer la nouvelle journée :", carryover_option: "1. Reporter le solde net de la caisse comme fond de départ",
+                carryover_desc1: "Montant restant actuellement", carryover_desc2: "comme fond pour le lendemain.", zero_option: "2. Remettre le jour actuel à zéro (0.00)",
+                settings_modal_title: "Paramètres et Sauvegarde", logo_label: "Logo de l'Entreprise", choose_logo: "Choisir un Logo",
+                remove_logo: "Supprimer le Logo", business_name_label: "Nom de l'Établissement", whatsapp_label: "Numéro WhatsApp pour les Rapports",
+                pin_label: "Verrouillage de Sécurité (PIN 4 chiffres)", pin_disabled: "Désactivé", backup_label: "Sauvegarde et Restauration",
+                export_json: "Exporter Sauvegarde JSON", restore_backup: "Restaurer Sauvegarde", save_settings: "Enregistrer les Paramètres"
+            },
+            ru: {
+                exchange: "Курс:", currency_egp: "EGP", menu_cart: "Меню клиента и корзина", menu_barcode: "Штрихкод меню",
+                reports: "Отчеты", install: "Установить", settings: "Настройки", new_day: "Новый день",
+                opening_cash: "Начальный остаток в кассе", opening_cash_desc: "Начальные средства в кассе", total_sales: "Общие продажи",
+                visa_sales: "Продажи по карте (Банк)", cash_sales_sub: "Продажи наличными:", total_expenses: "Общие расходы",
+                net_profit: "Чистая прибыль за сегодня", net_profit_desc: "Общие продажи - Расходы", drawer_cash: "Остаток в кассе (Фактический)",
+                pending_orders_label: "Отложенные заказы:", sales_section_title: "Регистрация заказов и продаж", open_menu_btn: "Открыть меню и заказ",
+                manage_items_btn: "Управление товарами", item_name: "Название товара", category: "Категория", qty: "Кол-во", currency: "Валюта",
+                unit_price: "Цена за ед.", client_note: "Клиент / Стол / Примечание", total_egp: "Итого в EGP",
+                extras_toggle: "Добавить скидку или сбор / налог (опционально)", discount: "Скидка", disc_amount: "Сумма",
+                tax_service: "Сбор / Налог (%)", payment_status: "Статус оплаты:", paid_status: "Оплачено (добавлено к продажам)",
+                unpaid_status: "Не оплачено (отложенный заказ)", payment_method: "Способ оплаты:", cash_method: "Наличные (в кассу)",
+                visa_method: "Карта / Виза (банк)", submit_order_btn: "Зарегистрировать заказ", cancel: "Отмена",
+                pending_orders_title: "Отложенные заказы - Не оплачено", th_item_client: "Товар и клиент", th_qty: "Кол-во",
+                th_value: "Сумма", th_egp: "В EGP", th_action: "Подтвердить / Действие", collected_sales_title: "Журнал оплаченных продаж",
+                th_item_payment: "Товар и способ оплаты", th_equivalent: "Эквивалент (EGP)", th_actions: "Действия",
+                expenses_section_title: "Регистрация расходов", expenses_badge: "Мелкие расходы / Сырье / Зарплата", exp_desc_label: "Описание расхода / Причина",
+                amount: "Сумма", in_egp: "В EGP", submit_expense_btn: "Зарегистрировать расход", expenses_log_title: "Журнал расходов за сегодня",
+                th_statement: "Описание", th_amount: "Сумма", th_delete: "Удалить", customer_menu_title: "Меню напитков и электронный заказ",
+                customer_menu_subtitle: "Выберите любимые напитки и добавьте их в корзину для заказа", cart_btn: "Корзина", search_placeholder: "Поиск напитка...",
+                cart_title: "Корзина заказов", table_client_label: "№ стола / Имя клиента", notes_label: "Доп. примечания (сахар, лед...)",
+                total: "Итого:", send_to_cashier_btn: "Отправить заказ кассиру", barcode_modal_title: "Статический штрихкод электронного меню",
+                barcode_modal_subtitle: "Сканируйте код камерой телефона для заказа", copy_link: "Копировать ссылку", print_barcode: "Печать штрихкода",
+                reports_center_title: "Центр отчетов и статистики", reports_center_subtitle: "Анализ категорий, хитов продаж и периодов",
+                range_today: "Сегодня", range_week: "Последние 7 дней", range_month: "Этот месяц", range_all: "Все записи",
+                from: "С:", to: "По:", tab_categories: "Отчеты по категориям и товарам", tab_financial: "Финансовый свод",
+                sales_by_category: "Продажи по категориям", top_selling_items: "Популярные товары (по убыванию)", item: "Товар",
+                sold_qty: "Продано кол-во", total_income: "Общий доход", percentage: "Процент", cash_visa: "Наличные / Виза",
+                period_net_profit: "Чистая прибыль за период", days_details: "Детали по дням за период", day_unit: "дн.",
+                date: "Дата", sales: "Продажи", expenses: "Расходы", net: "Чистая", print_pdf_btn: "Печать / Сохранить PDF",
+                close: "Закрыть", install_modal_title: "Установить приложение на телефон", install_modal_subtitle: "Превратите систему в автономное приложение с иконкой на главном экране",
+                install_now_btn: "Установить приложение в 1 клик", android_steps_title: "Телефоны Android (браузер Chrome):",
+                android_step_1: "Нажмите на меню из трех точек ( ⋮ ) вверху браузера.", android_step_2: "Выберите \"Добавить на главный экран\".",
+                android_step_3: "Нажмите \"Установить\".", pin_modal_title: "Защищенная PIN-кодом зона",
+                pin_modal_subtitle: "Введите 4-значный PIN-код", pin_error: "Неверный PIN-код!", confirm: "Подтвердить",
+                manage_items_title: "Управление товарами, категориями и изображениями", item_name_req: "Название товара *", price: "Цена",
+                item_image_label: "Изображение товара (опционально)", choose_image: "Выбрать фото...", delete: "Удалить", add_new_item_btn: "Добавить новый товар",
+                saved_items_count: "Сохраненные товары", restore_defaults: "Восстановить стандартное меню", new_day_title: "Начать новый рабочий день",
+                new_day_desc: "Выберите способ начала нового дня:", carryover_option: "1. Перенести остаток кассы как сальдо на новый день",
+                carryover_desc1: "Текущий остаток", carryover_desc2: "как остаток на следующий день.", zero_option: "2. Сбросить текущий день и начать с нуля (0.00)",
+                settings_modal_title: "Настройки и резервное копирование", logo_label: "Логотип заведения", choose_logo: "Выбрать логотип",
+                remove_logo: "Удалить логотип", business_name_label: "Название заведения", whatsapp_label: "Номер WhatsApp для отчетов",
+                pin_label: "Защитная блокировка (PIN 4 цифры)", pin_disabled: "Отключено", backup_label: "Резервное копирование и восстановление",
+                export_json: "Экспорт JSON бекапа", restore_backup: "Восстановить бекап", save_settings: "Сохранить настройки"
+            }
+        };
+
+        const COMPLETE_MENU_PRESETS = [
+            { name: 'ميلك شيك مانجو', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك فراولة', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك شيكولاتة', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك كراميل', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك اوريو', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك باشون فروت', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك كيوي', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك بينا كولادا', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك أناناس', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك بلوبيري', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك ميكس بيري', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك بستاشيو', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك شيك لوتس', category: 'ميلك شيك', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس كوفي بستاشيو', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس كوفي كراميل بندق', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس موكا', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس كوفي بندق', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس كوفي كراميل', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس كوفي كلاسيك', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس لاتيه', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس كوفي شيكولاتة', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس سبانيش لاتيه', category: 'آيس كوفي', price: 300, currency: 'EGP', image: '' },
+            { name: 'رمان', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'تفاح', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'ليمون نعناع', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'فراولة', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'مانجو', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'موز باللبن', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'بطيخ', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'برتقال', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'كانتلوب', category: 'عصائر فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'طبق صغير', category: 'اطباق فاكهة فريش', price: 300, currency: 'EGP', image: '' },
+            { name: 'طبق وسط', category: 'اطباق فاكهة فريش', price: 450, currency: 'EGP', image: '' },
+            { name: 'طبق كبير', category: 'اطباق فاكهة فريش', price: 600, currency: 'EGP', image: '' },
+            { name: 'ماتشا بلوبيري', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا جوز هند', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا مانجو', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا كلاسيك', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا فراولة', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا بستاشيو', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا كراميل', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا فانيليا', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'ماتشا اسبريسو', category: 'الماتشا', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه كراميل كوكيز', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه اوريو', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه بندق', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه لوتس', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه كلاسيك', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه كراميل', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه شيكولاتة بندق', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه شيكولاتة', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'فرابيه بستاشيو', category: 'فرابيه', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي خوخ', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي باشون فروت', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي برتقال', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي فراولة', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي بلوبيري', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي مانجو', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي كلاسيك', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي تفاح', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'آيس تي ليمون', category: 'آيس تي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي ليمون نعناع', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي موز', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي مانجو', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي بطيخ', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي كانتلوب', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي باشون فروت', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي فراولة', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي بلوبيري', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي خوخ', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي أناناس', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي كيوي ليمون نعناع', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'سموزي خوخ برتقال', category: 'سموزي', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو كلاسيك', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو برتقال', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو مانجو', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو فراولة', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو خوخ', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو بلوبيري', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو أناناس', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو كيوي', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو بلو اوشن', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو ريد بول', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'موهيتو ريد سي', category: 'موهيتو', price: 300, currency: 'EGP', image: '' },
+            { name: 'قهوة تركي', category: 'مشروبات ساخنة', price: 200, currency: 'EGP', image: '' },
+            { name: 'قهوة فرنساوي', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'سبانيش لاتيه', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'بستاشيو لاتيه', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'دبل ميكاتو', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'لاتيه', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'كابتشينو', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'امريكان كوفي', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'لاتيه كراميل', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', image: '' },
+            { name: 'هوت ماتشا', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', featured: true, image: '' },
+            { name: 'هوت شوكليت', category: 'مشروبات ساخنة', price: 300, currency: 'EGP', featured: true, image: '' },
+            { name: 'كانز نسكافيه', category: 'سوفت درينكس', price: 300, currency: 'EGP', desc: 'متعدد الأطعم', image: '' },
+            { name: 'كانز ليبتون آيس تي', category: 'سوفت درينكس', price: 300, currency: 'EGP', desc: 'متعدد الأطعم', image: '' },
+            { name: 'كانز ريد بول', category: 'سوفت درينكس', price: 300, currency: 'EGP', desc: 'متعدد الأطعم', image: '' },
+            { name: 'كوكاكولا تريبل زيرو', category: 'سوفت درينكس', price: 300, currency: 'EGP', image: '' },
+            { name: 'كوكاكولا كوفي', category: 'سوفت درينكس', price: 300, currency: 'EGP', image: '' },
+            { name: 'بيبسي زيرو', category: 'سوفت درينكس', price: 300, currency: 'EGP', image: '' },
+            { name: 'برنجلز', category: 'سوفت درينكس', price: 300, currency: 'EGP', desc: 'متعدد الأطعم', image: '' },
+            { name: 'براون شوجر', category: 'مشروبات آسيوية', price: 300, currency: 'EGP', image: '' },
+            { name: 'ميلك تي', category: 'مشروبات آسيوية', price: 300, currency: 'EGP', image: '' },
+            { name: 'تايجر ميلك تي', category: 'مشروبات آسيوية', price: 300, currency: 'EGP', image: '' },
+            { name: 'تارو ميلك تي', category: 'مشروبات آسيوية', price: 300, currency: 'EGP', image: '' },
+            { name: 'انرجي ميكس مانجو', category: 'الطاقة والانتعاش', price: 300, currency: 'EGP', desc: 'ريد بول، اسبريسو، والطعم', image: '' },
+            { name: 'انرجي ميكس بندق', category: 'الطاقة والانتعاش', price: 300, currency: 'EGP', desc: 'ريد بول، اسبريسو، والطعم', image: '' },
+            { name: 'انرجي ميكس كلاسيك', category: 'الطاقة والانتعاش', price: 300, currency: 'EGP', desc: 'ريد بول، اسبريسو، والطعم', image: '' }
+        ];
+
+        let state = {
+            lang: 'ar',
+            date: new Date().toISOString().split('T')[0],
+            activeCategoryFilter: 'الكل',
+            rates: { USD: 50.00, EUR: 54.00 },
+            settings: { businessName: 'Freshly for Cold & Hot Drinks', logo: '', whatsappNumber: '201119843222', pin: '' },
+            presets: [],
+            cart: [],
+            dayData: { openingCash: 0, sales: [], pendingOrders: [], expenses: [] }
+        };
+
+        let deferredInstallPrompt = null;
+        let tempPresetImage = '';
+
+        function changeLanguage(lang) {
+            if (!TRANSLATIONS[lang]) return;
+            state.lang = lang;
+            localStorage.setItem('cashier_lang', lang);
+            
+            const htmlEl = document.documentElement;
+            htmlEl.setAttribute('lang', lang);
+            htmlEl.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (TRANSLATIONS[lang][key]) {
+                    el.textContent = TRANSLATIONS[lang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (TRANSLATIONS[lang][key]) {
+                    el.placeholder = TRANSLATIONS[lang][key];
+                }
+            });
+
+            const selMob = document.getElementById('language-switcher-mobile');
+            const selDesk = document.getElementById('language-switcher-desktop');
+            if (selMob) selMob.value = lang;
+            if (selDesk) selDesk.value = lang;
+
+            renderPresets();
+            renderCustomerMenu();
+            updateUI();
+        }
+
+        function setupPWA() {
+            const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#0B0E14"/><text x="256" y="305" font-size="220" text-anchor="middle" fill="#D4AF37" font-family="sans-serif" font-weight="bold">$</text></svg>`;
+            const iconDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+            const appleIcon = document.getElementById('apple-touch-icon');
+            if (appleIcon) appleIcon.href = iconDataUrl;
+
+            const manifestObj = {
+                name: state.settings.businessName || 'Freshly for Cold & Hot Drinks',
+                short_name: 'الكاشير الذكي',
+                start_url: window.location.href,
+                display: 'standalone',
+                background_color: '#0B0E14',
+                theme_color: '#0B0E14',
+                icons: [{ src: iconDataUrl, sizes: '512x512', type: 'image/svg+xml' }]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/json' });
+            const pwaManifest = document.getElementById('pwa-manifest');
+            if (pwaManifest) pwaManifest.href = URL.createObjectURL(manifestBlob);
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                const btn = document.getElementById('pwa-direct-install-btn');
+                if (btn) btn.classList.remove('hidden');
+            });
+        }
+
+        function openInstallModal() {
+            document.getElementById('install-modal').classList.remove('hidden');
+            document.getElementById('install-modal').classList.add('flex');
+        }
+        function closeInstallModal() {
+            document.getElementById('install-modal').classList.add('hidden');
+            document.getElementById('install-modal').classList.remove('flex');
+        }
+        async function triggerPwaInstall() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('تم تثبيت التطبيق بنجاح!');
+                closeInstallModal();
+            }
+            deferredInstallPrompt = null;
+        }
+
+        let pendingPinCallback = null;
+        function safeRequirePin(callback) {
+            const currentPin = (state.settings.pin || '').trim();
+            if (!currentPin) { callback(); return; }
+            pendingPinCallback = callback;
+            const input = document.getElementById('pin-verify-input');
+            input.value = '';
+            document.getElementById('pin-error-msg').classList.add('hidden');
+            document.getElementById('pin-modal').classList.remove('hidden');
+            document.getElementById('pin-modal').classList.add('flex');
+            setTimeout(() => input.focus(), 100);
+        }
+        function submitPinVerify() {
+            const entered = document.getElementById('pin-verify-input').value.trim();
+            if (entered === state.settings.pin) {
+                closePinModal();
+                if (typeof pendingPinCallback === 'function') {
+                    const cb = pendingPinCallback;
+                    pendingPinCallback = null;
+                    cb();
+                }
+            } else {
+                document.getElementById('pin-error-msg').classList.remove('hidden');
+                document.getElementById('pin-verify-input').value = '';
+                document.getElementById('pin-verify-input').focus();
+            }
+        }
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+            document.getElementById('pin-modal').classList.remove('flex');
+        }
+
+        function initApp() {
+            const savedLang = localStorage.getItem('cashier_lang');
+            if (savedLang) {
+                changeLanguage(savedLang);
+            } else {
+                changeLanguage('ar');
+            }
+
+            const savedRates = localStorage.getItem('cashier_rates');
+            if (savedRates) {
+                state.rates = JSON.parse(savedRates);
+                document.getElementById('rate-usd').value = state.rates.USD;
+                document.getElementById('rate-eur').value = state.rates.EUR;
+            }
+
+            const savedSettings = localStorage.getItem('cashier_settings');
+            if (savedSettings) {
+                state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
+            }
+            applyBranding();
+            setupPWA();
+
+            const savedPresets = localStorage.getItem('cashier_presets');
+            if (savedPresets) {
+                try { state.presets = JSON.parse(savedPresets); } catch (e) { state.presets = [...COMPLETE_MENU_PRESETS]; }
+            } else {
+                state.presets = [...COMPLETE_MENU_PRESETS];
+                localStorage.setItem('cashier_presets', JSON.stringify(state.presets));
+            }
+
+            renderPresets();
+            renderCustomerMenu();
+
+            const dateInput = document.getElementById('current-date');
+            dateInput.value = state.date;
+            loadDayData(state.date);
+
+            setupEventListeners();
+        }
+
+        function applyBranding() {
+            const nameEl = document.getElementById('header-business-name');
+            const logoImg = document.getElementById('header-logo-img');
+            const logoIcon = document.getElementById('header-logo-icon');
+            const pinBadge = document.getElementById('pin-active-badge');
+
+            if (nameEl) nameEl.textContent = state.settings.businessName || 'Freshly for Cold & Hot Drinks';
+            if (pinBadge) {
+                if (state.settings.pin) pinBadge.classList.remove('hidden');
+                else pinBadge.classList.add('hidden');
+            }
+
+            if (state.settings.logo && logoImg && logoIcon) {
+                logoImg.src = state.settings.logo;
+                logoImg.classList.remove('hidden');
+                logoIcon.classList.add('hidden');
+            } else if (logoImg && logoIcon) {
+                logoImg.src = '';
+                logoImg.classList.add('hidden');
+                logoIcon.classList.remove('hidden');
+            }
+        }
+
+        function loadDayData(dateStr) {
+            state.date = dateStr;
+            const raw = localStorage.getItem(`cashier_day_${dateStr}`);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                state.dayData = {
+                    openingCash: parsed.openingCash || 0,
+                    sales: parsed.sales || [],
+                    pendingOrders: parsed.pendingOrders || [],
+                    expenses: parsed.expenses || []
+                };
+            } else {
+                state.dayData = { openingCash: 0, sales: [], pendingOrders: [], expenses: [] };
+            }
+            const opCash = document.getElementById('opening-cash');
+            if (opCash) opCash.value = state.dayData.openingCash || 0;
+            resetSaleForm();
+            updateUI();
+        }
+
+        function saveDayData() {
+            localStorage.setItem(`cashier_day_${state.date}`, JSON.stringify(state.dayData));
+            updateUI();
+        }
+
+        function toEGP(amount, currency) {
+            const val = parseFloat(amount) || 0;
+            if (currency === 'USD') return val * (parseFloat(state.rates.USD) || 0);
+            if (currency === 'EUR') return val * (parseFloat(state.rates.EUR) || 0);
+            return val;
+        }
+
+        function calcOrderFinalOrig(item) {
+            const subTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
+            const discVal = parseFloat(item.discount) || 0;
+            const discAmount = item.discountType === 'percent' ? (subTotal * discVal / 100) : discVal;
+            const afterDisc = Math.max(0, subTotal - discAmount);
+            const taxPercent = parseFloat(item.taxPercent) || 0;
+            return afterDisc + (afterDisc * (taxPercent / 100));
+        }
+
+        function formatNum(num) {
+            return Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getCurrencySymbol(curr) {
+            if (curr === 'USD') return '$';
+            if (curr === 'EUR') return '€';
+            return TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+        }
+
+        function updateUI() {
+            let salesByCurr = { EGP: 0, USD: 0, EUR: 0 };
+            let totalSalesEGP = 0;
+            let totalCashSalesEGP = 0;
+            let totalVisaSalesEGP = 0;
+
+            state.dayData.sales.forEach(item => {
+                const lineTotalOrig = calcOrderFinalOrig(item);
+                const lineTotalEGP = toEGP(lineTotalOrig, item.currency);
+                salesByCurr[item.currency] = (salesByCurr[item.currency] || 0) + lineTotalOrig;
+                totalSalesEGP += lineTotalEGP;
+                if (item.paymentMethod === 'visa') totalVisaSalesEGP += lineTotalEGP;
+                else totalCashSalesEGP += lineTotalEGP;
+            });
+
+            let expByCurr = { EGP: 0, USD: 0, EUR: 0 };
+            let totalExpEGP = 0;
+            state.dayData.expenses.forEach(item => {
+                const amt = parseFloat(item.amount) || 0;
+                expByCurr[item.currency] = (expByCurr[item.currency] || 0) + amt;
+                totalExpEGP += toEGP(amt, item.currency);
+            });
+
+            const openingCash = parseFloat(state.dayData.openingCash) || 0;
+            const netProfit = totalSalesEGP - totalExpEGP;
+            const drawerCash = openingCash + totalCashSalesEGP - totalExpEGP;
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+
+            document.getElementById('dash-total-sales').textContent = formatNum(totalSalesEGP);
+            document.getElementById('sales-detail-egp').textContent = `${formatNum(salesByCurr.EGP)} ${currSymbol}`;
+            document.getElementById('sales-detail-usd').textContent = `$${formatNum(salesByCurr.USD)}`;
+            document.getElementById('sales-detail-eur').textContent = `€${formatNum(salesByCurr.EUR)}`;
+
+            document.getElementById('dash-visa-sales').textContent = formatNum(totalVisaSalesEGP);
+            document.getElementById('dash-cash-sales-sub').textContent = `${formatNum(totalCashSalesEGP)} ${currSymbol}`;
+
+            document.getElementById('dash-total-expenses').textContent = formatNum(totalExpEGP);
+            document.getElementById('exp-detail-egp').textContent = `${formatNum(expByCurr.EGP)} ${currSymbol}`;
+            document.getElementById('exp-detail-usd').textContent = `$${formatNum(expByCurr.USD)}`;
+            document.getElementById('exp-detail-eur').textContent = `€${formatNum(expByCurr.EUR)}`;
+
+            const netEl = document.getElementById('dash-net-profit');
+            netEl.textContent = formatNum(netProfit);
+            netEl.className = `text-2xl font-extrabold ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            document.getElementById('dash-drawer-cash').textContent = formatNum(drawerCash);
+            const carryEl = document.getElementById('modal-carryover-amount');
+            if (carryEl) carryEl.textContent = formatNum(drawerCash);
+
+            let totalPendingEGP = 0;
+            state.dayData.pendingOrders.forEach(item => {
+                totalPendingEGP += toEGP(calcOrderFinalOrig(item), item.currency);
+            });
+            document.getElementById('dash-pending-summary').textContent = `${state.dayData.pendingOrders.length} (${formatNum(totalPendingEGP)})`;
+            document.getElementById('pending-total-badge').textContent = `${formatNum(totalPendingEGP)} ${currSymbol}`;
+
+            renderPendingTable();
+            renderSalesTable();
+            renderExpensesTable();
+        }
+
+        function togglePaymentMethodBox() {
+            const status = document.querySelector('input[name="payment-status"]:checked')?.value || 'paid';
+            const box = document.getElementById('payment-method-box');
+            if (status === 'paid') box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+
+        function toggleExtrasBox(forceOpen = null) {
+            const box = document.getElementById('sale-extras-box');
+            const chevron = document.getElementById('extras-chevron');
+            const shouldOpen = forceOpen !== null ? forceOpen : box.classList.contains('hidden');
+            if (shouldOpen) {
+                box.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                box.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function renderPresets() {
+            const tabsContainer = document.getElementById('category-filter-tabs');
+            const allLabel = state.lang === 'ar' ? 'الكل' : (state.lang === 'en' ? 'All' : (state.lang === 'de' ? 'Alle' : (state.lang === 'fr' ? 'Tous' : 'Все')));
+            const cats = [allLabel, ...new Set(state.presets.map(p => p.category || 'أخرى').filter(Boolean))];
+
+            if (!cats.includes(state.activeCategoryFilter)) state.activeCategoryFilter = allLabel;
+
+            tabsContainer.innerHTML = cats.map(cat => {
+                const isActive = state.activeCategoryFilter === cat;
+                return `<button type="button" onclick="window.setCategoryFilter('${cat}')"
+                    class="px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition ${isActive ? 'bg-amber-500 text-dark-950' : 'bg-dark-800 text-zinc-400 hover:text-white border border-dark-700'}">
+                    ${cat}
+                </button>`;
+            }).join('');
+
+            const container = document.getElementById('quick-items-container');
+            container.innerHTML = '';
+            const filtered = state.activeCategoryFilter === allLabel
+                ? state.presets
+                : state.presets.filter(p => (p.category || 'أخرى') === state.activeCategoryFilter);
+
+            filtered.forEach((preset) => {
+                const curr = preset.currency || 'EGP';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'px-3 py-1.5 rounded-xl bg-dark-800 hover:bg-amber-500 hover:text-dark-950 text-zinc-200 border border-dark-700 hover:border-amber-500 text-xs font-semibold transition flex items-center gap-1.5';
+                btn.innerHTML = `<span>${preset.name}</span>` + (preset.price > 0 ? `<span class="opacity-75 text-[10px]">(${preset.price} ${getCurrencySymbol(curr)})</span>` : '');
+                btn.onclick = () => {
+                    document.getElementById('sale-item-name').value = preset.name;
+                    document.getElementById('sale-category').value = preset.category || 'مشروبات';
+                    document.getElementById('sale-currency').value = curr;
+                    document.getElementById('sale-price').value = preset.price > 0 ? preset.price : '';
+                    document.getElementById('sale-price').focus();
+                    updateSalePreview();
+                };
+                container.appendChild(btn);
+            });
+            updateCategoriesDatalist();
+        }
+
+        function setCategoryFilter(cat) {
+            state.activeCategoryFilter = cat;
+            renderPresets();
+        }
+
+        function updateCategoriesDatalist() {
+            const datalist = document.getElementById('categories-datalist');
+            const cats = [...new Set(state.presets.map(p => p.category || 'مشروبات').filter(Boolean))];
+            datalist.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+        }
+
+        function renderManagePresetsList() {
+            const listEl = document.getElementById('manage-presets-list');
+            document.getElementById('presets-modal-count').textContent = state.presets.length;
+            if (state.presets.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-zinc-500 text-xs py-6">لا توجد أصناف محفوظة</div>`;
+                return;
+            }
+            listEl.innerHTML = state.presets.map((preset, idx) => {
+                const curr = preset.currency || 'EGP';
+                return `
+                    <div class="flex items-center justify-between bg-dark-800/80 border border-dark-700 px-3.5 py-2.5 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-dark-900 border border-dark-700 flex items-center justify-center overflow-hidden shrink-0">
+                                ${preset.image ? `<img src="${preset.image}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-mug-hot text-amber-400 text-xs"></i>'}
+                            </div>
+                            <div>
+                                <span class="font-bold text-white text-sm">${preset.name}</span>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border">${preset.category || 'أخرى'}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded bg-dark-900 text-zinc-300">${preset.price} ${getCurrencySymbol(curr)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="window.editPreset(${idx})" class="p-1.5 rounded-lg bg-dark-900 text-amber-400 hover:bg-amber-500 hover:text-dark-950"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button type="button" onclick="window.deletePreset(${idx})" class="p-1.5 rounded-lg bg-dark-900 text-rose-400 hover:bg-rose-500 hover:text-white"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function editPreset(idx) {
+            const preset = state.presets[idx];
+            if (!preset) return;
+            document.getElementById('preset-edit-index').value = idx;
+            document.getElementById('new-preset-name').value = preset.name;
+            document.getElementById('new-preset-category').value = preset.category || '';
+            document.getElementById('new-preset-price').value = preset.price || '';
+            document.getElementById('new-preset-currency').value = preset.currency || 'EGP';
+            tempPresetImage = preset.image || '';
+            document.getElementById('preset-img-filename').textContent = tempPresetImage ? 'تم اختيار صورة' : 'اختر صورة...';
+            const removeBtn = document.getElementById('remove-preset-img-btn');
+            if (tempPresetImage && removeBtn) removeBtn.classList.remove('hidden');
+            else if (removeBtn) removeBtn.classList.add('hidden');
+
+            document.getElementById('preset-submit-btn').textContent = 'حفظ تعديل الصنف';
+            document.getElementById('preset-cancel-edit').classList.remove('hidden');
+        }
+
+        function deletePreset(idx) {
+            state.presets.splice(idx, 1);
+            localStorage.setItem('cashier_presets', JSON.stringify(state.presets));
+            renderPresets();
+            renderManagePresetsList();
+            showToast('تم حذف الصنف', 'rose');
+        }
+
+        function removePresetImage() {
+            tempPresetImage = '';
+            document.getElementById('preset-img-filename').textContent = 'اختر صورة...';
+            document.getElementById('remove-preset-img-btn').classList.add('hidden');
+            document.getElementById('new-preset-image-input').value = '';
+        }
+
+        function resetPresetForm() {
+            document.getElementById('custom-item-form').reset();
+            document.getElementById('preset-edit-index').value = '-1';
+            tempPresetImage = '';
+            document.getElementById('preset-img-filename').textContent = 'اختر صورة...';
+            document.getElementById('remove-preset-img-btn').classList.add('hidden');
+            document.getElementById('preset-submit-btn').textContent = 'إضافة صنف جديد';
+            document.getElementById('preset-cancel-edit').classList.add('hidden');
+        }
+
+        function restoreDefaultPresets() {
+            state.presets = [...COMPLETE_MENU_PRESETS];
+            localStorage.setItem('cashier_presets', JSON.stringify(state.presets));
+            renderPresets();
+            renderManagePresetsList();
+            showToast('تمت استعادة المنيو الافتراضي الكامل بنجاح');
+        }
+
+        function updateSalePreview() {
+            const qty = parseFloat(document.getElementById('sale-qty').value) || 0;
+            const price = parseFloat(document.getElementById('sale-price').value) || 0;
+            const curr = document.getElementById('sale-currency').value;
+            const discount = parseFloat(document.getElementById('sale-discount').value) || 0;
+            const discountType = document.getElementById('sale-discount-type').value;
+            const taxPercent = parseFloat(document.getElementById('sale-tax').value) || 0;
+
+            const finalOrig = calcOrderFinalOrig({ qty, price, discount, discountType, taxPercent });
+            const totalEGP = toEGP(finalOrig, curr);
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            document.getElementById('sale-preview-egp').textContent = `${formatNum(totalEGP)} ${currSymbol}`;
+        }
+
+        function getExtrasBadgesHTML(item) {
+            let html = '';
+            if (item.category) html += `<span class="text-[10px] px-1.5 py-0.5 rounded bg-dark-800 text-amber-300/90 border">${item.category}</span>`;
+            if (item.discount > 0) {
+                const dTxt = item.discountType === 'percent' ? `${item.discount}%` : `${item.discount} ${getCurrencySymbol(item.currency)}`;
+                html += `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300">خصم ${dTxt}</span>`;
+            }
+            if (item.taxPercent > 0) html += `<span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300">+${item.taxPercent}% خدمة</span>`;
+            return html;
+        }
+
+        function renderPendingTable() {
+            const tbody = document.getElementById('pending-table-body');
+            document.getElementById('pending-count').textContent = state.dayData.pendingOrders.length;
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            if (state.dayData.pendingOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-5 text-center text-zinc-500 text-xs">لا توجد أوردرات معلقة</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.dayData.pendingOrders.slice().reverse().map(item => {
+                const totalOrig = calcOrderFinalOrig(item);
+                const totalEGP = toEGP(totalOrig, item.currency);
+                return `
+                    <tr class="hover:bg-orange-500/5 transition">
+                        <td class="py-2.5 px-3">
+                            <div class="font-bold text-white text-xs sm:text-sm flex flex-wrap items-center gap-1.5">
+                                <span>${item.name}</span> ${getExtrasBadgesHTML(item)}
+                            </div>
+                            ${item.note ? `<div class="text-[11px] text-orange-300 mt-0.5"><i class="fa-solid fa-user-clock ml-1"></i>${item.note}</div>` : ''}
+                        </td>
+                        <td class="py-2.5 px-2 text-center font-bold text-orange-400">${item.qty}</td>
+                        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-500/15 text-orange-300">${formatNum(totalOrig)} ${getCurrencySymbol(item.currency)}</span></td>
+                        <td class="py-2.5 px-3 font-extrabold text-orange-400">${formatNum(totalEGP)} <span class="text-[10px] font-normal text-zinc-400">${currSymbol}</span></td>
+                        <td class="py-2.5 px-2 text-center no-print">
+                            <div class="flex flex-wrap items-center justify-center gap-1">
+                                <button type="button" onclick="window.confirmPendingOrder('${item.id}', 'cash')" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1"><i class="fa-solid fa-money-bill-wave"></i> كاش</button>
+                                <button type="button" onclick="window.confirmPendingOrder('${item.id}', 'visa')" class="px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold flex items-center gap-1"><i class="fa-regular fa-credit-card"></i> فيزا</button>
+                                <button type="button" onclick="window.deletePendingOrder('${item.id}')" class="p-1.5 text-zinc-400 hover:text-rose-400"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function confirmPendingOrder(id, method = 'cash') {
+            const index = state.dayData.pendingOrders.findIndex(p => p.id === id);
+            if (index === -1) return;
+            const [order] = state.dayData.pendingOrders.splice(index, 1);
+            order.paymentMethod = method;
+            state.dayData.sales.push(order);
+            saveDayData();
+            showToast(`تم تأكيد سداد "${order.name}" (${method === 'visa' ? 'فيزا' : 'كاش'})`);
+        }
+
+        function deletePendingOrder(id) {
+            state.dayData.pendingOrders = state.dayData.pendingOrders.filter(p => p.id !== id);
+            saveDayData();
+            showToast('تم حذف الأوردر المعلق', 'rose');
+        }
+
+        function renderSalesTable() {
+            const tbody = document.getElementById('sales-table-body');
+            document.getElementById('sales-count').textContent = state.dayData.sales.length;
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            if (state.dayData.sales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-500 text-xs">لا توجد مبيعات مسجلة اليوم</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.dayData.sales.slice().reverse().map(item => {
+                const totalOrig = calcOrderFinalOrig(item);
+                const totalEGP = toEGP(totalOrig, item.currency);
+                const isVisa = item.paymentMethod === 'visa';
+                const methodBadge = isVisa 
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-400 border"><i class="fa-regular fa-credit-card"></i> فيزا</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border"><i class="fa-solid fa-money-bill-wave"></i> كاش</span>`;
+
+                return `
+                    <tr class="hover:bg-dark-800/40 transition">
+                        <td class="py-2.5 px-3">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="font-bold text-white text-xs sm:text-sm">${item.name}</span>
+                                ${methodBadge} ${getExtrasBadgesHTML(item)}
+                            </div>
+                            ${item.note ? `<div class="text-[11px] text-zinc-400 mt-0.5"><i class="fa-regular fa-comment-dots ml-1"></i>${item.note}</div>` : ''}
+                        </td>
+                        <td class="py-2.5 px-2 text-center font-bold text-amber-400">${item.qty}</td>
+                        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-dark-800">${formatNum(totalOrig)} ${getCurrencySymbol(item.currency)}</span></td>
+                        <td class="py-2.5 px-3 font-extrabold ${isVisa ? 'text-sky-400' : 'text-emerald-400'}">${formatNum(totalEGP)} <span class="text-[10px] font-normal text-zinc-400">${currSymbol}</span></td>
+                        <td class="py-2.5 px-2 text-center no-print">
+                            <button type="button" onclick="window.safeRequirePin(() => window.deleteSale('${item.id}'))" class="p-1.5 text-zinc-400 hover:text-rose-400"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deleteSale(id) {
+            state.dayData.sales = state.dayData.sales.filter(s => s.id !== id);
+            saveDayData();
+            showToast('تم حذف عملية البيع', 'rose');
+        }
+
+        function updateExpensePreview() {
+            const amt = parseFloat(document.getElementById('exp-amount').value) || 0;
+            const curr = document.getElementById('exp-currency').value;
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            document.getElementById('exp-preview-egp').textContent = `${formatNum(toEGP(amt, curr))} ${currSymbol}`;
+        }
+
+        function renderExpensesTable() {
+            const tbody = document.getElementById('expenses-table-body');
+            document.getElementById('expenses-count').textContent = state.dayData.expenses.length;
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            if (state.dayData.expenses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-zinc-500 text-xs">لا توجد مصاريف مسجلة</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.dayData.expenses.slice().reverse().map(item => {
+                const totalEGP = toEGP(item.amount, item.currency);
+                return `
+                    <tr class="hover:bg-dark-800/40 transition">
+                        <td class="py-2.5 px-3 font-semibold text-white text-xs sm:text-sm">${item.desc}</td>
+                        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-500/10 text-rose-300">${formatNum(item.amount)} ${getCurrencySymbol(item.currency)}</span></td>
+                        <td class="py-2.5 px-3 font-extrabold text-rose-400">${formatNum(totalEGP)} <span class="text-[10px] font-normal text-zinc-400">${currSymbol}</span></td>
+                        <td class="py-2.5 px-2 text-center no-print">
+                            <button type="button" onclick="window.safeRequirePin(() => window.deleteExpense('${item.id}'))" class="p-1.5 text-zinc-400 hover:text-rose-400"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deleteExpense(id) {
+            state.dayData.expenses = state.dayData.expenses.filter(e => e.id !== id);
+            saveDayData();
+            showToast('تم حذف المصروف', 'rose');
+        }
+
+        let customerActiveCategory = 'الكل';
+
+        function openCustomerMenuModal() {
+            const allLabel = state.lang === 'ar' ? 'الكل' : (state.lang === 'en' ? 'All' : (state.lang === 'de' ? 'Alle' : (state.lang === 'fr' ? 'Tous' : 'Все')));
+            customerActiveCategory = allLabel;
+            document.getElementById('customer-menu-modal').classList.remove('hidden');
+            document.getElementById('customer-menu-modal').classList.add('flex');
+            renderCustomerMenu();
+            updateCartUI();
+        }
+
+        function closeCustomerMenuModal() {
+            document.getElementById('customer-menu-modal').classList.add('hidden');
+            document.getElementById('customer-menu-modal').classList.remove('flex');
+        }
+
+        function toggleCartDrawer(open) {
+            const drawer = document.getElementById('cart-drawer');
+            if (open) {
+                drawer.classList.remove('hidden');
+                drawer.classList.add('flex');
+            } else {
+                drawer.classList.add('hidden');
+                drawer.classList.remove('flex');
+            }
+        }
+
+        function renderCustomerMenu() {
+            const tabsContainer = document.getElementById('customer-cat-tabs');
+            const allLabel = state.lang === 'ar' ? 'الكل' : (state.lang === 'en' ? 'All' : (state.lang === 'de' ? 'Alle' : (state.lang === 'fr' ? 'Tous' : 'Все')));
+            const cats = [allLabel, ...new Set(state.presets.map(p => p.category || 'أخرى').filter(Boolean))];
+
+            tabsContainer.innerHTML = cats.map(cat => {
+                const isActive = customerActiveCategory === cat;
+                return `<button type="button" onclick="window.setCustomerCategory('${cat}')"
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition ${isActive ? 'bg-gold-500 text-dark-950' : 'bg-dark-900 text-zinc-300 border border-dark-700 hover:border-gold-500/50'}">
+                    ${cat}
+                </button>`;
+            }).join('');
+
+            const grid = document.getElementById('customer-menu-grid');
+            const searchVal = (document.getElementById('customer-search-input').value || '').trim().toLowerCase();
+
+            let items = state.presets;
+            if (customerActiveCategory !== allLabel) {
+                items = items.filter(p => (p.category || 'أخرى') === customerActiveCategory);
+            }
+            if (searchVal) {
+                items = items.filter(p => p.name.toLowerCase().includes(searchVal) || (p.category && p.category.toLowerCase().includes(searchVal)));
+            }
+
+            if (items.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-16 text-center text-zinc-500 text-sm">لا توجد مشروبات مطابقة للبحث</div>`;
+                return;
+            }
+
+            grid.innerHTML = items.map((item) => {
+                const curr = item.currency || 'EGP';
+                const priceNum = item.price > 0 ? item.price : 300;
+                const imageHtml = item.image 
+                    ? `<img src="${item.image}" class="w-full h-full object-cover">` 
+                    : `<span class="text-3xl">☕</span>`;
+
+                return `
+                    <div class="bg-dark-900 border border-dark-800 hover:border-gold-500/50 rounded-2xl p-4 flex flex-col justify-between shadow-xl transition group">
+                        <div>
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-dark-800 text-gold-400 border border-gold-500/30">${item.category || 'مشروبات'}</span>
+                                ${item.featured ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40">مميز</span>` : ''}
+                            </div>
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500/10 to-gold-500/30 border border-gold-500/30 flex items-center justify-center mx-auto my-3 overflow-hidden group-hover:scale-105 transition">
+                                ${imageHtml}
+                            </div>
+                            <h4 class="font-bold text-white text-sm sm:text-base text-center mb-1">${item.name}</h4>
+                            ${item.desc ? `<p class="text-[11px] text-zinc-400 text-center mb-2 line-clamp-2">${item.desc}</p>` : ''}
+                        </div>
+                        <div class="pt-3 border-t border-dark-800 flex items-center justify-between gap-2 mt-2">
+                            <span class="text-sm font-extrabold text-gold-400">${priceNum} ${getCurrencySymbol(curr)}</span>
+                            <button type="button" onclick="window.addToCart('${item.name.replace(/'/g, "\\'")}', '${item.category || 'مشروبات'}', ${priceNum}, '${curr}')"
+                                class="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-dark-950 text-xs font-bold transition flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>أضف للسلة</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setCustomerCategory(cat) {
+            customerActiveCategory = cat;
+            renderCustomerMenu();
+        }
+
+        function addToCart(name, category, price, currency) {
+            const existing = state.cart.find(c => c.name === name && c.currency === currency);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                state.cart.push({ name, category, price, currency, qty: 1 });
+            }
+            updateCartUI();
+            showToast(`تمت إضافة "${name}" للسلة`);
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const totalQty = state.cart.reduce((sum, i) => sum + i.qty, 0);
+            if (badge) badge.textContent = totalQty;
+
+            const listEl = document.getElementById('cart-items-list');
+            if (!listEl) return;
+
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            if (state.cart.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-zinc-500 py-12 text-xs">السلة فارغة حالياً</div>`;
+                document.getElementById('cart-total-amount').textContent = `0.00 ${currSymbol}`;
+                return;
+            }
+
+            let totalCartVal = 0;
+            listEl.innerHTML = state.cart.map((item, idx) => {
+                const itemTotal = item.qty * item.price;
+                totalCartVal += toEGP(itemTotal, item.currency);
+
+                return `
+                    <div class="flex items-center justify-between py-2.5">
+                        <div>
+                            <h5 class="font-bold text-white text-xs sm:text-sm">${item.name}</h5>
+                            <span class="text-[11px] text-zinc-400">${item.price} ${getCurrencySymbol(item.currency)} × ${item.qty}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1.5 bg-dark-800 px-2 py-1 rounded-lg border border-dark-700">
+                                <button type="button" onclick="window.changeCartQty(${idx}, -1)" class="w-5 h-5 rounded bg-dark-900 text-zinc-300 hover:text-white flex items-center justify-center text-xs">-</button>
+                                <span class="text-xs font-bold text-gold-400 w-5 text-center">${item.qty}</span>
+                                <button type="button" onclick="window.changeCartQty(${idx}, 1)" class="w-5 h-5 rounded bg-dark-900 text-zinc-300 hover:text-white flex items-center justify-center text-xs">+</button>
+                            </div>
+                            <button type="button" onclick="window.removeFromCart(${idx})" class="text-zinc-500 hover:text-rose-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cart-total-amount').textContent = `${formatNum(totalCartVal)} ${currSymbol}`;
+        }
+
+        function changeCartQty(idx, delta) {
+            state.cart[idx].qty += delta;
+            if (state.cart[idx].qty <= 0) state.cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function removeFromCart(idx) {
+            state.cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        function submitCartOrderToCashier() {
+            if (state.cart.length === 0) {
+                showToast('السلة فارغة!', 'rose');
+                return;
+            }
+            const clientName = document.getElementById('cart-client-name').value.trim();
+            if (!clientName) {
+                showToast('يرجى إدخال رقم الطاولة أو اسم العميل', 'rose');
+                document.getElementById('cart-client-name').focus();
+                return;
+            }
+            const notes = document.getElementById('cart-order-notes').value.trim();
+            const nowTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            state.cart.forEach(item => {
+                state.dayData.pendingOrders.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                    name: item.name,
+                    category: item.category,
+                    qty: item.qty,
+                    price: item.price,
+                    currency: item.currency,
+                    note: `${clientName}${notes ? ' - ' + notes : ''}`,
+                    discount: 0,
+                    discountType: 'amount',
+                    taxPercent: 0,
+                    time: nowTime
+                });
+            });
+
+            saveDayData();
+            state.cart = [];
+            updateCartUI();
+            toggleCartDrawer(false);
+            closeCustomerMenuModal();
+            showToast('تم إرسال الطلب إلى أوردرات الكاشير المعلقة بنجاح!');
+        }
+
+        function openFixedBarcodeModal() {
+            const modal = document.getElementById('fixed-barcode-modal');
+            const qrContainer = document.getElementById('fixed-qrcode-container');
+            const linkDisplay = document.getElementById('fixed-menu-link-display');
+            const menuUrl = window.location.href.split('#')[0];
+
+            linkDisplay.textContent = menuUrl;
+            qrContainer.innerHTML = '';
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                try {
+                    if (typeof QRCode !== 'undefined') {
+                        new QRCode(qrContainer, {
+                            text: menuUrl,
+                            width: 200,
+                            height: 200,
+                            colorDark: '#0B0E14',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    } else {
+                        qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(menuUrl)}" alt="QR Code" class="w-[200px] h-[200px]">`;
+                    }
+                } catch (e) {
+                    qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(menuUrl)}" alt="QR Code" class="w-[200px] h-[200px]">`;
+                }
+            }, 50);
+        }
+
+        function closeFixedBarcodeModal() {
+            document.getElementById('fixed-barcode-modal').classList.add('hidden');
+            document.getElementById('fixed-barcode-modal').classList.remove('flex');
+        }
+
+        function copyFixedMenuLink() {
+            const menuUrl = window.location.href.split('#')[0];
+            navigator.clipboard.writeText(menuUrl).then(() => showToast('تم نسخ رابط المنيو بنجاح!'));
+        }
+
+        function printFixedBarcode() {
+            window.print();
+        }
+
+        function openReportsModal() {
+            setReportRange('today');
+            document.getElementById('reports-modal').classList.remove('hidden');
+            document.getElementById('reports-modal').classList.add('flex');
+        }
+
+        function closeReportsModal() {
+            document.getElementById('reports-modal').classList.add('hidden');
+            document.getElementById('reports-modal').classList.remove('flex');
+        }
+
+        function switchReportTab(tab) {
+            const catTab = document.getElementById('report-tab-categories');
+            const finTab = document.getElementById('report-tab-financial');
+            const catBtn = document.getElementById('tab-btn-categories');
+            const finBtn = document.getElementById('tab-btn-financial');
+
+            if (tab === 'categories') {
+                catTab.classList.remove('hidden');
+                finTab.classList.add('hidden');
+                catBtn.className = 'py-2 px-3 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-400 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition';
+                finBtn.className = 'py-2 px-3 rounded-xl bg-dark-800 border border-dark-700 text-zinc-400 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition';
+            } else {
+                finTab.classList.remove('hidden');
+                catTab.classList.add('hidden');
+                finBtn.className = 'py-2 px-3 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-400 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition';
+                catBtn.className = 'py-2 px-3 rounded-xl bg-dark-800 border border-dark-700 text-zinc-400 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition';
+            }
+        }
+
+        function setReportRange(range) {
+            document.querySelectorAll('.report-preset-btn').forEach(btn => {
+                if (btn.dataset.range === range) btn.className = 'report-preset-btn px-3 py-1.5 rounded-xl bg-amber-500 text-dark-950 text-xs font-extrabold transition';
+                else btn.className = 'report-preset-btn px-3 py-1.5 rounded-xl bg-dark-900 text-zinc-300 border border-dark-700 text-xs font-bold transition';
+            });
+
+            const fromEl = document.getElementById('report-from-date');
+            const toEl = document.getElementById('report-to-date');
+            const baseDate = new Date(state.date);
+
+            if (range === 'today') {
+                fromEl.value = state.date;
+                toEl.value = state.date;
+            } else if (range === 'week') {
+                const start = new Date(baseDate);
+                start.setDate(start.getDate() - 6);
+                fromEl.value = start.toISOString().split('T')[0];
+                toEl.value = state.date;
+            } else if (range === 'month') {
+                const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+                fromEl.value = start.toISOString().split('T')[0];
+                toEl.value = state.date;
+            } else if (range === 'all') {
+                fromEl.value = '2020-01-01';
+                toEl.value = '2099-12-31';
+            }
+            generateReports();
+        }
+
+        function generateReports() {
+            const fromDate = document.getElementById('report-from-date').value;
+            const toDate = document.getElementById('report-to-date').value;
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+
+            const daysList = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('cashier_day_')) {
+                    const dStr = key.replace('cashier_day_', '');
+                    if ((!fromDate || dStr >= fromDate) && (!toDate || dStr <= toDate)) {
+                        try { daysList.push({ date: dStr, data: JSON.parse(localStorage.getItem(key)) }); } catch (e) {}
+                    }
+                }
+            }
+            daysList.sort((a, b) => a.date.localeCompare(b.date));
+
+            let grandSales = 0, grandCash = 0, grandVisa = 0, grandExp = 0;
+            const categoryStats = {};
+            const itemStats = {};
+            const dailyRowsHTML = [];
+
+            daysList.forEach(day => {
+                let dSales = 0, dExp = 0;
+                (day.data.sales || []).forEach(s => {
+                    const orig = calcOrderFinalOrig(s);
+                    const egp = toEGP(orig, s.currency);
+                    dSales += egp;
+                    grandSales += egp;
+                    if (s.paymentMethod === 'visa') grandVisa += egp;
+                    else grandCash += egp;
+
+                    const cat = (s.category || 'أخرى').trim();
+                    if (!categoryStats[cat]) categoryStats[cat] = { qty: 0, revenue: 0 };
+                    categoryStats[cat].qty += (parseInt(s.qty) || 1);
+                    categoryStats[cat].revenue += egp;
+
+                    const itemName = (s.name || 'صنف').trim();
+                    if (!itemStats[itemName]) itemStats[itemName] = { category: cat, qty: 0, revenue: 0 };
+                    itemStats[itemName].qty += (parseInt(s.qty) || 1);
+                    itemStats[itemName].revenue += egp;
+                });
+
+                (day.data.expenses || []).forEach(e => {
+                    const egp = toEGP(e.amount, e.currency);
+                    dExp += egp;
+                    grandExp += egp;
+                });
+
+                dailyRowsHTML.push(`
+                    <tr class="hover:bg-dark-800/40">
+                        <td class="py-2 px-3 font-bold text-white">${day.date}</td>
+                        <td class="py-2 px-3 text-emerald-400 font-bold">${formatNum(dSales)} ${currSymbol}</td>
+                        <td class="py-2 px-3 text-rose-400 font-bold">${formatNum(dExp)} ${currSymbol}</td>
+                        <td class="py-2 px-3 font-extrabold ${dSales - dExp >= 0 ? 'text-amber-400' : 'text-rose-400'}">${formatNum(dSales - dExp)} ${currSymbol}</td>
+                    </tr>
+                `);
+            });
+
+            document.getElementById('rep-fin-sales').textContent = `${formatNum(grandSales)} ${currSymbol}`;
+            document.getElementById('rep-fin-cash').textContent = `${formatNum(grandCash)} كاش`;
+            document.getElementById('rep-fin-visa').textContent = `${formatNum(grandVisa)} فيزا`;
+            document.getElementById('rep-fin-exp').textContent = `${formatNum(grandExp)} ${currSymbol}`;
+            document.getElementById('rep-fin-net').textContent = `${formatNum(grandSales - grandExp)} ${currSymbol}`;
+            document.getElementById('rep-days-count').textContent = daysList.length;
+            document.getElementById('rep-days-table-body').innerHTML = dailyRowsHTML.length ? dailyRowsHTML.join('') : `<tr><td colspan="4" class="py-6 text-center text-zinc-500">لا توجد بيانات مسجلة</td></tr>`;
+
+            document.getElementById('report-cat-total-badge').textContent = `${formatNum(grandSales)} ${currSymbol}`;
+            const barsContainer = document.getElementById('category-bars-container');
+            const sortedCats = Object.entries(categoryStats).sort((a, b) => b[1].revenue - a[1].revenue);
+
+            if (sortedCats.length === 0) {
+                barsContainer.innerHTML = `<p class="text-center text-zinc-500 text-xs py-4">لا توجد مبيعات مسجلة</p>`;
+            } else {
+                barsContainer.innerHTML = sortedCats.map(([catName, info]) => {
+                    const pct = grandSales > 0 ? ((info.revenue / grandSales) * 100).toFixed(1) : 0;
+                    return `
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-bold text-white">${catName} <span class="text-zinc-400">(${info.qty} قطعة)</span></span>
+                                <span class="font-extrabold text-amber-400">${formatNum(info.revenue)} ${currSymbol} (${pct}%)</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-dark-950 rounded-full overflow-hidden border">
+                                <div class="h-full bg-amber-500 rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const topItemsBody = document.getElementById('top-items-table-body');
+            const sortedItems = Object.entries(itemStats).sort((a, b) => b[1].revenue - a[1].revenue);
+            if (sortedItems.length === 0) {
+                topItemsBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-zinc-500 text-xs">لا توجد أصناف مباعة</td></tr>`;
+            } else {
+                topItemsBody.innerHTML = sortedItems.map(([name, info], idx) => {
+                    const pct = grandSales > 0 ? ((info.revenue / grandSales) * 100).toFixed(1) : 0;
+                    const rank = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1);
+                    return `
+                        <tr class="hover:bg-dark-800/40">
+                            <td class="py-2.5 px-3 font-bold text-amber-400">${rank}</td>
+                            <td class="py-2.5 px-3 font-bold text-white">${name}</td>
+                            <td class="py-2.5 px-3"><span class="text-[11px] px-2 py-0.5 rounded bg-dark-900 text-zinc-300">${info.category}</span></td>
+                            <td class="py-2.5 px-3 text-center font-extrabold text-amber-400">${info.qty}</td>
+                            <td class="py-2.5 px-3 font-extrabold text-emerald-400">${formatNum(info.revenue)} ${currSymbol}</td>
+                            <td class="py-2.5 px-3 text-center text-zinc-400">${pct}%</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function printReportDocument() {
+            window.print();
+        }
+
+        function exportBackupData() {
+            const backup = { version: '3.0', exportedAt: new Date().toISOString(), rates: state.rates, settings: state.settings, presets: state.presets, days: {} };
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('cashier_day_')) backup.days[key] = JSON.parse(localStorage.getItem(key));
+            }
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cashier_backup_${state.date}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('تم تصدير النسخة الاحتياطية بنجاح');
+        }
+
+        function importBackupData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.rates) { state.rates = data.rates; localStorage.setItem('cashier_rates', JSON.stringify(data.rates)); }
+                    if (data.settings) { state.settings = data.settings; localStorage.setItem('cashier_settings', JSON.stringify(data.settings)); applyBranding(); }
+                    if (data.presets) { state.presets = data.presets; localStorage.setItem('cashier_presets', JSON.stringify(data.presets)); renderPresets(); }
+                    if (data.days) { Object.entries(data.days).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v))); }
+                    loadDayData(state.date);
+                    closeSettingsModal();
+                    showToast('تمت استعادة البيانات بنجاح!');
+                } catch (err) {
+                    showToast('خطأ في ملف النسخة الاحتياطية', 'rose');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        let tempLogoDataUrl = '';
+        function openSettingsModal() {
+            tempLogoDataUrl = state.settings.logo || '';
+            document.getElementById('settings-business-name').value = state.settings.businessName || '';
+            document.getElementById('settings-whatsapp').value = state.settings.whatsappNumber || '201119843222';
+            document.getElementById('settings-pin').value = state.settings.pin || '';
+            document.getElementById('pin-status-label').textContent = state.settings.pin ? 'مفعل' : 'غير مفعل';
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-modal').classList.add('flex');
+        }
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+            document.getElementById('settings-modal').classList.remove('flex');
+        }
+        function removeLogo() {
+            tempLogoDataUrl = '';
+            document.getElementById('logo-file-input').value = '';
+        }
+
+        function openNewDayModal() {
+            document.getElementById('new-day-modal').classList.remove('hidden');
+            document.getElementById('new-day-modal').classList.add('flex');
+        }
+        function closeNewDayModal() {
+            document.getElementById('new-day-modal').classList.add('hidden');
+            document.getElementById('new-day-modal').classList.remove('flex');
+        }
+        function startNewDay(carryOver) {
+            let totalCashSalesEGP = state.dayData.sales.reduce((acc, s) => s.paymentMethod === 'visa' ? acc : acc + toEGP(calcOrderFinalOrig(s), s.currency), 0);
+            let totalExpEGP = state.dayData.expenses.reduce((acc, e) => acc + toEGP(e.amount, e.currency), 0);
+            const currentDrawer = (parseFloat(state.dayData.openingCash) || 0) + totalCashSalesEGP - totalExpEGP;
+
+            if (carryOver) {
+                const nextDate = new Date(state.date);
+                nextDate.setDate(nextDate.getDate() + 1);
+                const nextDateStr = nextDate.toISOString().split('T')[0];
+                document.getElementById('current-date').value = nextDateStr;
+                state.date = nextDateStr;
+                state.dayData = { openingCash: Math.max(0, Number(currentDrawer.toFixed(2))), sales: [], pendingOrders: [], expenses: [] };
+                document.getElementById('opening-cash').value = state.dayData.openingCash;
+                saveDayData();
+                showToast(`تم بدء يوم ${nextDateStr} وترحيل العهدة`);
+            } else {
+                state.dayData = { openingCash: 0, sales: [], pendingOrders: [], expenses: [] };
+                document.getElementById('opening-cash').value = 0;
+                saveDayData();
+                showToast('تم تصفير حسابات اليوم');
+            }
+            closeNewDayModal();
+        }
+
+        function sendWhatsAppReport() {
+            let totalSalesEGP = 0, totalCash = 0, totalVisa = 0;
+            state.dayData.sales.forEach(s => {
+                const egp = toEGP(calcOrderFinalOrig(s), s.currency);
+                totalSalesEGP += egp;
+                if (s.paymentMethod === 'visa') totalVisa += egp; else totalCash += egp;
+            });
+            let totalExp = state.dayData.expenses.reduce((acc, e) => acc + toEGP(e.amount, e.currency), 0);
+            const biz = state.settings.businessName || 'Freshly for Cold & Hot Drinks';
+            const currSymbol = TRANSLATIONS[state.lang].currency_egp || 'ج.م';
+            let report = `📊 *${biz}*\n📅 التاريخ: ${state.date}\n💰 مبيعات: ${formatNum(totalSalesEGP)} ${currSymbol} (كاش: ${formatNum(totalCash)} | فيزا: ${formatNum(totalVisa)})\n📉 مصاريف: ${formatNum(totalExp)} ${currSymbol}\n✨ صافي الربح: ${formatNum(totalSalesEGP - totalExp)} ${currSymbol}`;
+
+            let phone = (state.settings.whatsappNumber || '201119843222').replace(/\D/g, '');
+            if (phone.startsWith('00')) phone = phone.substring(2);
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(report)}`, '_blank');
+        }
+
+        function openManageItemsModal() {
+            resetPresetForm();
+            renderManagePresetsList();
+            document.getElementById('manage-items-modal').classList.remove('hidden');
+            document.getElementById('manage-items-modal').classList.add('flex');
+        }
+        function closeManageItemsModal() {
+            document.getElementById('manage-items-modal').classList.add('hidden');
+            document.getElementById('manage-items-modal').classList.remove('flex');
+        }
+
+        let toastTimeout;
+        function showToast(message, color = 'amber') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = message;
+            document.getElementById('toast-icon').className = color === 'rose' ? 'fa-solid fa-trash-can text-rose-400 text-lg' : 'fa-solid fa-circle-check text-amber-400 text-lg';
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 3000);
+        }
+
+        function setupEventListeners() {
+            const pinVerifyInput = document.getElementById('pin-verify-input');
+            if (pinVerifyInput) {
+                pinVerifyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitPinVerify(); } });
+            }
+            
+            const logoInput = document.getElementById('logo-file-input');
+            if (logoInput) {
+                logoInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        tempLogoDataUrl = event.target.result;
+                        const preview = document.getElementById('settings-logo-preview');
+                        const placeholder = document.getElementById('settings-logo-placeholder');
+                        const removeBtn = document.getElementById('remove-logo-btn');
+                        if (preview && placeholder) {
+                            preview.src = tempLogoDataUrl;
+                            preview.classList.remove('hidden');
+                            placeholder.classList.add('hidden');
+                            if (removeBtn) removeBtn.classList.remove('hidden');
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const presetImgInput = document.getElementById('new-preset-image-input');
+            if (presetImgInput) {
+                presetImgInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        tempPresetImage = event.target.result;
+                        document.getElementById('preset-img-filename').textContent = file.name;
+                        document.getElementById('remove-preset-img-btn').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const settingsForm = document.getElementById('settings-form');
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const bizName = document.getElementById('settings-business-name').value.trim() || 'Freshly for Cold & Hot Drinks';
+                    let waNum = document.getElementById('settings-whatsapp').value.trim().replace(/\D/g, '');
+                    if (waNum.startsWith('00')) waNum = waNum.substring(2);
+                    const pinVal = document.getElementById('settings-pin').value.trim();
+
+                    state.settings = { businessName: bizName, logo: tempLogoDataUrl || state.settings.logo, whatsappNumber: waNum || '201119843222', pin: pinVal };
+                    localStorage.setItem('cashier_settings', JSON.stringify(state.settings));
+                    applyBranding();
+                    setupPWA();
+                    closeSettingsModal();
+                    showToast('تم حفظ الإعدادات بنجاح');
+                });
+            }
+
+            const currentDateEl = document.getElementById('current-date');
+            if (currentDateEl) currentDateEl.addEventListener('change', (e) => { if (e.target.value) loadDayData(e.target.value); });
+            
+            const rateUsdEl = document.getElementById('rate-usd');
+            if (rateUsdEl) rateUsdEl.addEventListener('input', (e) => { state.rates.USD = parseFloat(e.target.value) || 0; localStorage.setItem('cashier_rates', JSON.stringify(state.rates)); updateSalePreview(); updateUI(); });
+            
+            const rateEurEl = document.getElementById('rate-eur');
+            if (rateEurEl) rateEurEl.addEventListener('input', (e) => { state.rates.EUR = parseFloat(e.target.value) || 0; localStorage.setItem('cashier_rates', JSON.stringify(state.rates)); updateSalePreview(); updateUI(); });
+            
+            const openingCashEl = document.getElementById('opening-cash');
+            if (openingCashEl) openingCashEl.addEventListener('input', (e) => { state.dayData.openingCash = parseFloat(e.target.value) || 0; saveDayData(); });
+
+            ['sale-qty', 'sale-price', 'sale-currency', 'sale-discount', 'sale-discount-type', 'sale-tax'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateSalePreview);
+                    el.addEventListener('change', updateSalePreview);
+                }
+            });
+            ['exp-amount', 'exp-currency'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateExpensePreview);
+                    el.addEventListener('change', updateExpensePreview);
+                }
+            });
+
+            const salesForm = document.getElementById('sales-form');
+            if (salesForm) {
+                salesForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('sale-item-name').value.trim();
+                    const category = document.getElementById('sale-category').value.trim() || 'مشروبات';
+                    const qty = parseInt(document.getElementById('sale-qty').value) || 1;
+                    const price = parseFloat(document.getElementById('sale-price').value) || 0;
+                    const currency = document.getElementById('sale-currency').value;
+                    const note = document.getElementById('sale-note').value.trim();
+                    const discount = parseFloat(document.getElementById('sale-discount').value) || 0;
+                    const discountType = document.getElementById('sale-discount-type').value;
+                    const taxPercent = parseFloat(document.getElementById('sale-tax').value) || 0;
+                    const paymentStatus = document.querySelector('input[name="payment-status"]:checked').value;
+                    const paymentMethod = document.querySelector('input[name="payment-method"]:checked')?.value || 'cash';
+
+                    if (!name || price <= 0) return;
+                    const nowTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+                    const newOrder = {
+                        id: Date.now().toString(),
+                        name, category, qty, price, currency, note, discount, discountType, taxPercent, time: nowTime,
+                        paymentMethod: paymentStatus === 'paid' ? paymentMethod : undefined
+                    };
+
+                    if (paymentStatus === 'unpaid') {
+                        state.dayData.pendingOrders.push(newOrder);
+                        showToast('تمت الإضافة إلى الأوردرات المعلقة');
+                    } else {
+                        state.dayData.sales.push(newOrder);
+                        showToast(`تم تسجيل البيع (${paymentMethod === 'visa' ? 'فيزا' : 'كاش'})`);
+                    }
+                    saveDayData();
+                    resetSaleForm();
+                });
+            }
+
+            const expenseForm = document.getElementById('expense-form');
+            if (expenseForm) {
+                expenseForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const desc = document.getElementById('exp-desc').value.trim();
+                    const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
+                    const currency = document.getElementById('exp-currency').value;
+                    if (!desc || amount <= 0) return;
+
+                    state.dayData.expenses.push({ id: Date.now().toString(), desc, amount, currency });
+                    saveDayData();
+                    expenseForm.reset();
+                    updateExpensePreview();
+                    showToast('تم تسجيل المصروف');
+                });
+            }
+
+            const customItemForm = document.getElementById('custom-item-form');
+            if (customItemForm) {
+                customItemForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const editIdx = parseInt(document.getElementById('preset-edit-index').value);
+                    const name = document.getElementById('new-preset-name').value.trim();
+                    const category = document.getElementById('new-preset-category').value.trim() || 'مشروبات';
+                    const price = parseFloat(document.getElementById('new-preset-price').value) || 0;
+                    const currency = document.getElementById('new-preset-currency').value;
+                    if (!name) return;
+
+                    const itemData = { 
+                        name, 
+                        category, 
+                        price, 
+                        currency, 
+                        image: tempPresetImage || (editIdx >= 0 && state.presets[editIdx] ? state.presets[editIdx].image : '') 
+                    };
+
+                    if (editIdx >= 0 && editIdx < state.presets.length) {
+                        state.presets[editIdx] = { ...state.presets[editIdx], ...itemData };
+                        showToast('تم تعديل الصنف');
+                    } else {
+                        state.presets.push(itemData);
+                        showToast('تمت إضافة الصنف');
+                    }
+                    localStorage.setItem('cashier_presets', JSON.stringify(state.presets));
+                    renderPresets();
+                    renderManagePresetsList();
+                    resetPresetForm();
+                });
+            }
+        }
+
+        window.changeLanguage = changeLanguage;
+        window.openCustomerMenuModal = openCustomerMenuModal;
+        window.closeCustomerMenuModal = closeCustomerMenuModal;
+        window.toggleCartDrawer = toggleCartDrawer;
+        window.openFixedBarcodeModal = openFixedBarcodeModal;
+        window.closeFixedBarcodeModal = closeFixedBarcodeModal;
+        window.copyFixedMenuLink = copyFixedMenuLink;
+        window.printFixedBarcode = printFixedBarcode;
+        window.openReportsModal = openReportsModal;
+        window.closeReportsModal = closeReportsModal;
+        window.switchReportTab = switchReportTab;
+        window.setReportRange = setReportRange;
+        window.generateReports = generateReports;
+        window.printReportDocument = printReportDocument;
+        window.openInstallModal = openInstallModal;
+        window.closeInstallModal = closeInstallModal;
+        window.triggerPwaInstall = triggerPwaInstall;
+        window.safeRequirePin = safeRequirePin;
+        window.submitPinVerify = submitPinVerify;
+        window.closePinModal = closePinModal;
+        window.openManageItemsModal = openManageItemsModal;
+        window.closeManageItemsModal = closeManageItemsModal;
+        window.resetPresetForm = resetPresetForm;
+        window.restoreDefaultPresets = restoreDefaultPresets;
+        window.editPreset = editPreset;
+        window.deletePreset = deletePreset;
+        window.removePresetImage = removePresetImage;
+        window.openNewDayModal = openNewDayModal;
+        window.closeNewDayModal = closeNewDayModal;
+        window.startNewDay = startNewDay;
+        window.openSettingsModal = openSettingsModal;
+        window.closeSettingsModal = closeSettingsModal;
+        window.removeLogo = removeLogo;
+        window.exportBackupData = exportBackupData;
+        window.importBackupData = importBackupData;
+        window.sendWhatsAppReport = sendWhatsAppReport;
+        window.togglePaymentMethodBox = togglePaymentMethodBox;
+        window.toggleExtrasBox = toggleExtrasBox;
+        window.setCategoryFilter = setCategoryFilter;
+        window.setCustomerCategory = setCustomerCategory;
+        window.addToCart = addToCart;
+        window.changeCartQty = changeCartQty;
+        window.removeFromCart = removeFromCart;
+        window.submitCartOrderToCashier = submitCartOrderToCashier;
+        window.confirmPendingOrder = confirmPendingOrder;
+        window.deletePendingOrder = deletePendingOrder;
+        window.deleteSale = deleteSale;
+        window.deleteExpense = deleteExpense;
+        window.resetSaleForm = function() {
+            const form = document.getElementById('sales-form');
+            if (form) form.reset();
+            const editId = document.getElementById('sale-edit-id');
+            if (editId) editId.value = '';
+            const cancelBtn = document.getElementById('sale-cancel-edit');
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            const submitBtn = document.getElementById('btn-submit-order');
+            if (submitBtn) submitBtn.textContent = 'تسجيل الطلب';
+            updateSalePreview();
+        };
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
